@@ -1,0 +1,93 @@
+# ─────────────────────────────────────────────
+# Trigger Configuration
+# ─────────────────────────────────────────────
+# Defines what initiates a pipeline run.
+# The pipeline reads this to understand context —
+# different triggers adjust sourcing behavior.
+#
+# In production: triggers would be automated via
+# webhooks, cron jobs, and social listening APIs.
+# For the MVP: trigger is set manually per run.
+# ─────────────────────────────────────────────
+
+# ─── Trigger Types ───
+trigger_types:
+
+  scheduled:
+    description: "Regular bi-weekly content refresh cycle"
+    cadence: "Every other Monday"
+    sourcing_window_days: 30
+    priority_sources: "all"
+    use_case: "Steady content pipeline for always-on campaigns"
+
+  event_competitor_launch:
+    description: "A competitor launches a new ceramide/barrier product"
+    sourcing_window_days: 14
+    priority_sources:
+      - "competitor_tracking"
+      - "retail_data"
+      - "beauty_editorial"
+    emphasis: "Competitive positioning — highlight Dr. Jart+ differentiation"
+    example: "CeraVe launches a new ceramide SPF variant"
+    use_case: "Rapid response creative to maintain positioning"
+
+  event_viral_trend:
+    description: "A skincare trend crosses virality threshold on social"
+    detection_threshold: "10M+ views in 48 hours on TikTok OR 500%+ spike in Google Trends"
+    sourcing_window_days: 7
+    priority_sources:
+      - "social_signal"
+      - "beauty_editorial"
+      - "kbeauty_intelligence"
+    emphasis: "Trend-native positioning — we started this, the world is catching up"
+    example: "#skinbarrier trend explodes, or a new 'barrier repair' challenge goes viral"
+    use_case: "Capitalize on cultural moment with timely, on-brand content"
+
+  seasonal_winter:
+    description: "Winter barrier stress season (October through February)"
+    months: [10, 11, 12, 1, 2]
+    sourcing_window_days: 30
+    priority_sources:
+      - "beauty_editorial"
+      - "dermatologist_content"
+      - "social_signal"
+    emphasis: "Barrier protection against cold, wind, indoor heating. Moisture locking."
+    messaging_angle: "Your barrier works overtime in winter. Give it backup."
+    use_case: "Seasonal campaign aligned with real skin concerns"
+
+  seasonal_spring:
+    description: "Spring sensitivity and allergy season (March through April)"
+    months: [3, 4]
+    sourcing_window_days: 30
+    priority_sources:
+      - "beauty_editorial"
+      - "dermatologist_content"
+      - "social_signal"
+    emphasis: "Gentle repair, sensitivity soothing, barrier rebuilding after winter"
+    messaging_angle: "Spring reset — rebuild what winter broke."
+    use_case: "Seasonal campaign aligned with barrier recovery"
+
+  manual:
+    description: "Manually triggered by a creative brief or campaign request"
+    sourcing_window_days: 30
+    priority_sources: "all"
+    use_case: "Ad-hoc campaign creation, testing, or demo"
+
+# ─── Current Run Config ───
+# Set this before each pipeline run.
+# In production: set automatically by trigger detection.
+# For MVP demo: set manually.
+current_trigger: "seasonal_spring"
+
+# ─── How Triggers Affect the Pipeline ───
+# The source_collect node reads current_trigger and:
+#   1. Adjusts sourcing_window_days (how far back to look)
+#   2. Prioritizes certain source categories
+#   3. Logs the trigger context in the audit trail
+#
+# The narrative_synth node reads current_trigger and:
+#   1. Uses the emphasis/messaging_angle to guide narrative distillation
+#   2. Ensures the trend narratives align with the trigger's seasonal/event context
+#
+# This means the SAME pipeline produces different creative
+# depending on what triggered it — without changing any code.

@@ -1,0 +1,181 @@
+# ─────────────────────────────────────────────
+# Source Configuration
+# ─────────────────────────────────────────────
+# Defines the source allowlist, categories,
+# and filtering criteria for Phase 1 sourcing.
+#
+# In production: the source_collect node would
+# query these sources via APIs and web scraping.
+# For MVP: pre-curated data in data/sourced/
+# is validated against these categories.
+# ─────────────────────────────────────────────
+
+# ─── Source Categories ───
+# 6 categories covering different signal types.
+# Evidence sufficiency check requires records
+# from at least 3 different categories.
+
+categories:
+
+  beauty_editorial:
+    description: "Major beauty publications and online magazines"
+    signal_type: "Trend validation, expert quotes, consumer education"
+    sources:
+      - name: "Allure"
+        domain: "allure.com"
+        domain_authority: 88
+      - name: "Vogue Beauty"
+        domain: "vogue.com"
+        domain_authority: 95
+      - name: "Who What Wear"
+        domain: "whowhatwear.com"
+        domain_authority: 82
+      - name: "Byrdie"
+        domain: "byrdie.com"
+        domain_authority: 78
+      - name: "Refinery29"
+        domain: "refinery29.com"
+        domain_authority: 85
+      - name: "Glamour"
+        domain: "glamour.com"
+        domain_authority: 84
+    min_domain_authority: 50
+
+  dermatologist_content:
+    description: "Board-certified dermatologist content and clinical sources"
+    signal_type: "Clinical credibility, ingredient efficacy, professional consensus"
+    sources:
+      - name: "AAD Publications"
+        domain: "aad.org"
+        domain_authority: 82
+      - name: "DermTok Creators"
+        domain: "tiktok.com"
+        domain_authority: 0  # social — use creator verification instead
+      - name: "Board-certified derm blogs"
+        domain: "various"
+        domain_authority: 40
+    min_domain_authority: 40
+    note: "DermTok creators are verified by credentials, not domain authority"
+
+  social_signal:
+    description: "Social media trends, consumer sentiment, UGC"
+    signal_type: "Consumer sentiment, viral moments, UGC trends, real language patterns"
+    sources:
+      - name: "TikTok #skinbarrier"
+        platform: "tiktok"
+        hashtag: "#skinbarrier"
+        current_views: "700M+"
+      - name: "Reddit r/SkincareAddiction"
+        platform: "reddit"
+        subreddit: "r/SkincareAddiction"
+        subscribers: "2.5M+"
+      - name: "Instagram #ceramide"
+        platform: "instagram"
+        hashtag: "#ceramide"
+    min_domain_authority: 0  # social platforms don't use DA
+    note: "Scored by engagement metrics and relevance, not domain authority"
+
+  competitor_tracking:
+    description: "Competitor product launches, campaigns, messaging"
+    signal_type: "Positioning gaps, messaging angles, ad creative patterns"
+    targets:
+      - name: "CeraVe"
+        track: ["product launches", "ad campaigns", "social content"]
+      - name: "La Roche-Posay"
+        track: ["Cicaplast line updates", "derm endorsements"]
+      - name: "Aestura"
+        track: ["Atobarrier 365 campaigns", "Olive Young rankings"]
+      - name: "Drunk Elephant"
+        track: ["Lala Retro updates", "pricing changes"]
+    min_domain_authority: 30
+
+  retail_data:
+    description: "Search trends, retail rankings, consumer reviews"
+    signal_type: "Purchase intent signals, search volume, ratings, price sensitivity"
+    sources:
+      - name: "Google Trends"
+        type: "search_volume"
+        tracked_terms:
+          - "skin barrier repair"
+          - "ceramide moisturizer"
+          - "ceramidin cream"
+          - "dr jart ceramidin"
+          - "best barrier cream 2026"
+      - name: "Sephora Reviews"
+        domain: "sephora.com"
+        domain_authority: 86
+      - name: "Amazon Bestsellers"
+        domain: "amazon.com"
+        domain_authority: 96
+      - name: "Olive Young Rankings"
+        domain: "oliveyoung.com"
+        domain_authority: 55
+    min_domain_authority: 40
+
+  kbeauty_intelligence:
+    description: "Korea-first trend signals that lead Western markets by 6-12 months"
+    signal_type: "Early trend indicators, formulation innovations, Korean consumer behavior"
+    sources:
+      - name: "Seoul Sister"
+        domain: "seoulsister.com"
+        domain_authority: 25
+      - name: "Olive Young Charts"
+        domain: "oliveyoung.com"
+        domain_authority: 55
+      - name: "Hwahae App Ratings"
+        domain: "hwahae.co.kr"
+        domain_authority: 35
+    min_domain_authority: 20
+    note: "Lower DA threshold because Korean niche sources are high-signal despite smaller reach"
+
+# ─── Filtering Gates ───
+# Applied sequentially: recency → relevance → authority
+
+filters:
+  
+  recency:
+    max_age_days: 30
+    max_age_days_evergreen: 60  # for dermatologist/clinical content
+    description: "Source must be published within this window"
+  
+  relevance:
+    min_score: 0.75
+    scoring_method: "keyword_match + semantic_similarity"
+    description: "Source must be relevant to the anchor product and current trends"
+    required_keywords_any:
+      - "ceramide"
+      - "barrier repair"
+      - "skin barrier"
+      - "cica"
+      - "centella"
+      - "Dr. Jart"
+      - "Ceramidin"
+      - "CeraVe"
+      - "La Roche-Posay"
+      - "Aestura"
+      - "skin longevity"
+      - "moisture barrier"
+      - "barrier cream"
+  
+  authority:
+    min_domain_authority: 40
+    exceptions:
+      - "Social media sources (scored by engagement instead)"
+      - "K-beauty niche sources (min DA: 20)"
+    description: "Source must meet minimum authority threshold"
+
+# ─── Evidence Sufficiency Thresholds ───
+# Used by evidence_check.py to decide if there's enough data
+
+evidence_thresholds:
+  sufficient:
+    min_records: 6
+    min_categories: 3
+    description: "Enough diverse evidence to ground all 4 assets"
+  weak:
+    min_records: 3
+    min_categories: 2
+    description: "Some evidence but gaps exist — add synthetic supplements"
+  poor:
+    min_records_below: 3
+    description: "Not enough evidence to generate responsibly — stop and escalate"

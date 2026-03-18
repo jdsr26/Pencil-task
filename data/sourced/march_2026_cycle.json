@@ -1,0 +1,154 @@
+[
+  {
+    "id": "src_001",
+    "title": "2026 Skincare Trends: Barrier Repair Takes Center Stage",
+    "source_url": "https://www.whowhatwear.com/beauty/skin/2026-skincare-trends",
+    "source_name": "Who What Wear",
+    "category": "beauty_editorial",
+    "publish_date": "2026-01-29",
+    "relevance_score": 0.94,
+    "key_claims": [
+      "We're past the slugging trend and into targeted repair using ceramide-rich formulations",
+      "A healthy barrier is the foundation for everything else",
+      "If your barrier is compromised, none of your other products will work properly",
+      "2026 skincare trends are all about longevity and healthy aging"
+    ],
+    "competitor_mentions": ["La Roche-Posay Cicaplast", "SkinCeuticals Triple Lipid Restore"],
+    "trend_tags": ["barrier_repair", "ceramide", "skin_longevity", "anti_slugging"],
+    "product_link_rationale": "Ceramidin Cream's 5-ceramide complex directly addresses the shift from slugging to targeted ceramide repair",
+    "synthetic": false
+  },
+  {
+    "id": "src_002",
+    "title": "Top 10 Trending K-Beauty Products in March 2026",
+    "source_url": "https://www.seoulsister.com/blog/trending-k-beauty-products-2026-03",
+    "source_name": "Seoul Sister",
+    "category": "kbeauty_intelligence",
+    "publish_date": "2026-03-10",
+    "relevance_score": 0.91,
+    "key_claims": [
+      "Ceramide barrier products dominate Olive Young bestsellers in March 2026",
+      "Aestura Atobarrier 365 Cream scored 96/100 on Olive Young rankings",
+      "Barrier health is everything — nearly every top product strengthens the skin barrier",
+      "Korean brands are formulating as if everyone has sensitive skin"
+    ],
+    "competitor_mentions": ["Aestura Atobarrier 365", "SKIN1004", "Centellian24"],
+    "trend_tags": ["kbeauty", "ceramide", "barrier_repair", "olive_young"],
+    "product_link_rationale": "Ceramidin Cream is Dr. Jart+'s entry in the ceramide barrier category that dominates Korean bestseller charts — validates global market timing",
+    "synthetic": false
+  },
+  {
+    "id": "src_003",
+    "title": "Skin Barrier Market Projected to Reach $540.9M by 2034",
+    "source_url": "https://www.accio.com/business/skin_barrier_trend",
+    "source_name": "Accio Market Research",
+    "category": "retail_data",
+    "publish_date": "2026-02-15",
+    "relevance_score": 0.88,
+    "key_claims": [
+      "Global skin barrier market projected to grow at 3.8% CAGR reaching $540.9M by 2034",
+      "CeraVe and Dr. Jart seeing 200% sales growth in barrier segment",
+      "Google searches for ceramide skincare products surged to 16 in May 2025",
+      "Brands should prioritize ceramide-infused products to align with demand spikes"
+    ],
+    "competitor_mentions": ["CeraVe", "Dr. Jart"],
+    "trend_tags": ["market_growth", "ceramide", "barrier_repair", "competitor_signal"],
+    "product_link_rationale": "Dr. Jart+ is explicitly named as a growth leader in the barrier segment — Ceramidin Cream is their flagship barrier product",
+    "synthetic": false
+  },
+  {
+    "id": "src_004",
+    "title": "#skinbarrier TikTok Trend Surpasses 700M Views",
+    "source_url": "https://www.tiktok.com/tag/skinbarrier",
+    "source_name": "TikTok Social Listening",
+    "category": "social_signal",
+    "publish_date": "2026-03-05",
+    "relevance_score": 0.89,
+    "key_claims": [
+      "#skinbarrier has accumulated over 700 million views on TikTok",
+      "Consumer conversation shifting from slugging to targeted ceramide-based repair",
+      "UGC creators increasingly recommend ceramide creams over occlusive-only approaches",
+      "Dr. Jart+ Cicapair and Ceramidin frequently appear in barrier repair recommendation videos"
+    ],
+    "competitor_mentions": ["CeraVe", "La Roche-Posay"],
+    "trend_tags": ["social_trend", "barrier_repair", "anti_slugging", "ugc"],
+    "product_link_rationale": "Ceramidin Cream is already being recommended organically by TikTok creators in the barrier repair conversation — opportunity to amplify",
+    "synthetic": false
+  },
+  {
+    "id": "src_005",
+    "title": "Skincare Trends 2026: Science Meets Luxury — Barrier Repair Edition",
+    "source_url": "https://them-ethod.com/blogs/journal/skincare-trends-2026",
+    "source_name": "The Method",
+    "category": "beauty_editorial",
+    "publish_date": "2026-02-24",
+    "relevance_score": 0.86,
+    "key_claims": [
+      "Barrier repair in 2026 includes ceramides, panthenol, and madecassoside",
+      "A damaged barrier allows UV penetration and oxidative stress to trigger melanin overproduction",
+      "Fix the barrier first, and pigmentation becomes manageable",
+      "Modern formulations blend structural repair with brightening sophistication"
+    ],
+    "competitor_mentions": [],
+    "trend_tags": ["skin_longevity", "ceramide", "panthenol", "barrier_repair"],
+    "product_link_rationale": "Ceramidin Cream contains both ceramides AND panthenol — directly matches the ingredient combination experts recommend for 2026 barrier repair",
+    "synthetic": false
+  },
+  {
+    "id": "src_006",
+    "title": "8 Skincare Trends to Watch in 2026: Barrier Repair Gets Sophisticated",
+    "source_url": "https://optimadermatology.com/2025/12/04/8-skincare-trends-to-watch-in-2026",
+    "source_name": "Optima Dermatology",
+    "category": "dermatologist_content",
+    "publish_date": "2025-12-04",
+    "relevance_score": 0.87,
+    "key_claims": [
+      "After the viral rise of slugging, 2026 focuses on ceramide and lipid-rich formulas that restore balance",
+      "Skin barrier repair using ceramide-rich formulas prevents irritation without heavy occlusives",
+      "Dermatologists encourage patients to simplify routines and focus on hydration and barrier strength",
+      "Restorative and regenerative skincare driven by bioactive ingredients is gaining momentum"
+    ],
+    "competitor_mentions": [],
+    "trend_tags": ["dermatologist_endorsed", "barrier_repair", "ceramide", "routine_simplification"],
+    "product_link_rationale": "Dermatologists recommending ceramide-rich barrier repair validates Ceramidin Cream's clinical positioning — this is expert consensus, not just a trend",
+    "synthetic": false
+  },
+  {
+    "id": "src_007",
+    "title": "Google Trends: Skin Barrier Repair Searches Up 29% Year-over-Year",
+    "source_url": "https://trends.google.com/trends/explore?q=skin+barrier+repair",
+    "source_name": "Google Trends",
+    "category": "retail_data",
+    "publish_date": "2026-03-01",
+    "relevance_score": 0.92,
+    "key_claims": [
+      "Google searches for 'skin barrier repair' increased 29% year-over-year",
+      "Search volume for 'skin barrier repair' reached approximately 71,000 monthly searches",
+      "Related rising queries include 'best ceramide moisturizer' and 'barrier repair cream'",
+      "Search interest peaks during winter months and early spring"
+    ],
+    "competitor_mentions": [],
+    "trend_tags": ["search_volume", "barrier_repair", "ceramide", "purchase_intent"],
+    "product_link_rationale": "Rising search intent for barrier repair products means high-intent audience ready for Ceramidin Cream — Google Ads should target these exact queries",
+    "synthetic": false
+  },
+  {
+    "id": "src_008",
+    "title": "K-Beauty 2026: From 10-Step Routines to Barrier-First Minimalism",
+    "source_url": "https://bioma.health/blog/beauty-trends-2026-that-actually-work-from-hair-to-skincare/",
+    "source_name": "Bioma Health",
+    "category": "beauty_editorial",
+    "publish_date": "2026-03-16",
+    "relevance_score": 0.85,
+    "key_claims": [
+      "The era of rigid 10-step K-beauty routines has matured into something more strategic",
+      "Glass skin goal has evolved — 2026 focuses on strengthening the barrier first",
+      "Hydration built through lightweight toners, essence layers, and ceramide-rich moisturizers",
+      "2026 beauty trends are integrated with health science — barrier repair, microbiome awareness"
+    ],
+    "competitor_mentions": [],
+    "trend_tags": ["kbeauty", "routine_simplification", "barrier_repair", "ceramide", "skin_longevity"],
+    "product_link_rationale": "The shift from 10-step to barrier-first minimalism positions Ceramidin Cream as the one essential step — 'One cream, five ceramides, all the barrier support you need'",
+    "synthetic": false
+  }
+]
