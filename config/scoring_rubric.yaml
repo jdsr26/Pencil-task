@@ -1,0 +1,318 @@
+# ─────────────────────────────────────────────
+# Scoring Rubric v1.0
+# ─────────────────────────────────────────────
+# Defines how every asset is evaluated.
+# Two scoring tiers:
+#   Tier 1 (Deterministic): Rule-based, instant, free
+#   Tier 2 (LLM Judge): Subjective, requires LLM call
+#
+# Composite = (deterministic * 0.25) + (brand * 0.40) + (trend * 0.35)
+# An asset passes when composite >= threshold.
+#
+# Changing weights or thresholds here changes scoring
+# behavior without touching Python code.
+# ─────────────────────────────────────────────
+
+# ─── Global Settings ───
+threshold:
+  composite_pass: 85          # minimum composite score to pass
+  max_retries: 3              # max regeneration attempts per asset
+  circuit_breaker_count: 3    # if this many assets fail first pass, diagnose upstream
+
+weights:
+  format_compliance: 0.25     # deterministic checks
+  brand_alignment: 0.40       # LLM judge — highest weight because off-brand = highest risk
+  trend_alignment: 0.35       # LLM judge — what makes the creative timely and relevant
+
+# ─── Why These Weights? ───
+# 
+#
+# brand_alignment (40%): Off-brand content is the highest-risk failure mode
+#   for an enterprise client. A format error is fixable in 5 minutes.
+#   A tone-deaf ad that goes live damages brand trust. Pencil's enterprise
+#   clients (Unilever, Bayer, Diageo) care about this above all else.
+#
+# trend_alignment (35%): This is what makes the creative TIMELY and
+#   DIFFERENTIATED. Generic skincare copy that's on-brand but doesn't
+#   connect to the 2026 barrier repair narrative is a missed opportunity.
+#
+# format_compliance (25%): Important but largely mechanical. A headline
+#   that's 33 chars instead of 30 is easy to fix. It's the least risky
+#   failure mode, so it gets the lowest weight.
+
+
+# ─────────────────────────────────────────────
+# TIER 1: Deterministic Format Specs
+# ─────────────────────────────────────────────
+# These checks are rule-based. No LLM needed.
+# Each check returns pass/fail with expected vs actual values.
+
+format_specs:
+  
+  ads:
+    description: "Google Ads Responsive Search Ad — 3 headlines + 3 descriptions"
+    checks:
+      - name: "headline_count"
+        rule: "Must contain exactly 3 headlines"
+        expected: 3
+      - name: "headline_max_chars"
+        rule: "Each headline must be ≤30 characters"
+        expected: 30
+      - name: "description_count"
+        rule: "Must contain exactly 3 descriptions"
+        expected: 3
+      - name: "description_max_chars"
+        rule: "Each description must be ≤90 characters"
+        expected: 90
+      - name: "contains_product_name"
+        rule: "At least one headline or description must mention 'Ceramidin' or 'Dr. Jart'"
+        type: "keyword_presence"
+        keywords: ["Ceramidin", "Dr. Jart"]
+      - name: "no_blocked_language"
+        rule: "Must not contain any blocked terms from product_truth.yaml"
+        type: "keyword_absence"
+        source: "product_truth.blocked_language"
+  
+  video:
+    description: "Video generation prompt — 15-second vertical social ad"
+    checks:
+      - name: "specifies_aspect_ratio"
+        rule: "Must mention aspect ratio"
+        type: "keyword_presence"
+        keywords: ["9:16", "16:9", "1:1", "aspect ratio"]
+      - name: "specifies_duration"
+        rule: "Must mention video duration"
+        type: "keyword_presence"
+        keywords: ["15 second", "15-second", "15s", ":15", "duration"]
+      - name: "has_scene_breakdown"
+        rule: "Must have multiple distinct scenes or timestamps"
+        type: "keyword_presence"
+        keywords: ["Scene 1", "Scene 2", "0:00", "0-5s", "scene"]
+      - name: "mentions_product"
+        rule: "Must mention the product by name"
+        type: "keyword_presence"
+        keywords: ["Ceramidin", "Dr. Jart"]
+      - name: "specifies_mood_or_style"
+        rule: "Must include visual direction (mood, color, lighting)"
+        type: "keyword_presence"
+        keywords: ["mood", "lighting", "color", "palette", "tone", "aesthetic", "style"]
+      - name: "no_blocked_language"
+        rule: "Must not contain blocked terms"
+        type: "keyword_absence"
+        source: "product_truth.blocked_language"
+  
+  image:
+    description: "Image generation prompt — optimized for Midjourney/DALL-E/Flux"
+    checks:
+      - name: "includes_ar_flag"
+        rule: "Must include aspect ratio flag"
+        type: "keyword_presence"
+        keywords: ["--ar", "aspect ratio"]
+      - name: "includes_style_or_version_flag"
+        rule: "Must include style or version flag"
+        type: "keyword_presence"
+        keywords: ["--style", "--v", "--version", "--s"]
+      - name: "mentions_product"
+        rule: "Must mention the product or brand"
+        type: "keyword_presence"
+        keywords: ["Ceramidin", "Dr. Jart"]
+      - name: "specifies_photography_style"
+        rule: "Must specify a visual/photography style"
+        type: "keyword_presence"
+        keywords: ["photography", "editorial", "product shot", "close-up", "studio", "lifestyle"]
+      - name: "no_blocked_language"
+        rule: "Must not contain blocked terms"
+        type: "keyword_absence"
+        source: "product_truth.blocked_language"
+  
+  blog:
+    description: "SEO blog post — ~1000 words with structured headings"
+    checks:
+      - name: "word_count_range"
+        rule: "Must be between 800-1200 words"
+        expected_min: 800
+        expected_max: 1200
+        type: "word_count"
+      - name: "has_h2_headings"
+        rule: "Must contain H2 headings (## in markdown)"
+        type: "keyword_presence"
+        keywords: ["## "]
+      - name: "has_meta_description"
+        rule: "Must include a meta description"
+        type: "keyword_presence"
+        keywords: ["meta description", "Meta Description", "META DESCRIPTION", "meta:"]
+      - name: "meta_description_length"
+        rule: "Meta description must be ≤155 characters"
+        expected: 155
+        type: "meta_length"
+      - name: "mentions_product"
+        rule: "Must mention product name at least 3 times"
+        type: "keyword_count"
+        keywords: ["Ceramidin"]
+        minimum: 3
+      - name: "has_cta"
+        rule: "Must include a call to action"
+        type: "keyword_presence"
+        keywords: ["shop", "try", "discover", "explore", "visit", "get yours", "add to", "find"]
+      - name: "no_blocked_language"
+        rule: "Must not contain blocked terms"
+        type: "keyword_absence"
+        source: "product_truth.blocked_language"
+
+
+# ─────────────────────────────────────────────
+# TIER 2: LLM Judge Criteria
+# ─────────────────────────────────────────────
+# These require subjective evaluation — no regex can judge
+# whether copy "sounds like a smart friend who's a dermatologist."
+# The judge agent receives these criteria in its prompt.
+
+llm_judge:
+  
+  brand_alignment:
+    weight: 0.40
+    description: "Does this asset match Dr. Jart+'s brand voice?"
+    scoring_guide: |
+      Score 90-100: Perfect brand voice. Reads like official Dr. Jart+ content.
+        Smart, witty, science-backed, inclusive. Could go live on drjart.com today.
+      Score 75-89: Good but minor issues. Mostly on-brand with slight tone drift.
+        Maybe slightly too formal, or slightly too casual, but fundamentally correct.
+      Score 50-74: Noticeable problems. Off-brand in specific ways — too clinical,
+        too casual, fear-based undertones, or missing the K-beauty identity.
+      Score 25-49: Significant misalignment. Reads like generic skincare copy,
+        not Dr. Jart+. Wrong audience, wrong tone, wrong positioning.
+      Score 0-24: Completely off-brand. Could be any brand or no brand.
+    check_for:
+      - "Does it match the 'smart friend who's a dermatologist' personality?"
+      - "Does it lead with benefit and support with science?"
+      - "Is the humor witty without being silly?"
+      - "Does it make K-beauty science accessible, not intimidating?"
+      - "Is it inclusive and gender-neutral?"
+    flag_if:
+      - "Uses fear-based messaging"
+      - "Uses gendered language"
+      - "Uses hyperbolic claims"
+      - "Disparages competitors by name"
+      - "Sounds generic — could be any skincare brand"
+      - "Uses clinical jargon without explanation"
+  
+  trend_alignment:
+    weight: 0.35
+    description: "Does this asset connect Ceramidin™ to the 2026 barrier repair trend?"
+    scoring_guide: |
+      Score 90-100: Deeply trend-connected. The barrier repair narrative is woven
+        naturally into the creative. Product feels trend-DEFINING, not trend-chasing.
+        References or reflects specific sourced data.
+      Score 75-89: Good connection. Mentions barrier repair and positions product
+        well, but could be more specific or more naturally integrated.
+      Score 50-74: Surface-level. Mentions "barrier" or "ceramide" but doesn't
+        meaningfully connect to the 2026 trend narrative. Feels bolted on.
+      Score 25-49: Weak. Generic skincare messaging with minimal trend connection.
+        Could have been written in any year.
+      Score 0-24: No trend connection at all.
+    check_for:
+      - "Does it meaningfully connect Ceramidin™ to barrier repair as a trend?"
+      - "Does it reference or reflect data from the sourced trend records?"
+      - "Does it position the product as trend-NATIVE (always been doing this)?"
+      - "Does it avoid sounding like the brand is chasing a trend?"
+      - "Does it mention 'skin longevity', 'barrier-first', or similar 2026 language?"
+    flag_if:
+      - "No mention of barrier repair or skin barrier"
+      - "Sounds like the brand is jumping on a bandwagon"
+      - "Uses language like 'trending now' or 'everyone's talking about'"
+      - "Generic skincare copy with no temporal anchoring"
+      - "Makes trend claims without any grounding in sourced data"
+
+
+# ─────────────────────────────────────────────
+# Campaign Coherence Criteria
+# ─────────────────────────────────────────────
+# Checks cross-asset consistency — individual assets
+# may each pass alone but conflict with each other.
+
+campaign_coherence:
+  description: "All 4 assets should feel like one unified campaign"
+  criteria:
+    narrative_consistent:
+      check: "All assets reference the same trend narrative"
+      example_fail: "Ads say 'skip the routine' but blog promotes a multi-step routine"
+    tone_consistent:
+      check: "The tone is compatible across all formats"
+      example_fail: "Blog is clinical and formal but ads are playful and casual"
+    product_consistent:
+      check: "All assets reference Ceramidin™ with correct, consistent claims"
+      example_fail: "Video says '3 ceramides' but blog says '5 ceramides'"
+    cta_aligned:
+      check: "All assets point the user in the same direction"
+      example_fail: "Ads promote buying the cream but blog promotes a full regimen set"
+
+
+# ─────────────────────────────────────────────
+# Retry & Failure Logic
+# ─────────────────────────────────────────────
+# How the route_decision node handles failures.
+
+retry_logic:
+  
+  individual_failure:
+    action: "Regenerate only the failing asset"
+    feedback_injection: "Merge deterministic failures + LLM judge feedback into a CORRECTIONS block appended to the generation prompt"
+    max_attempts: 3
+  
+  pattern_failure:
+    description: "When multiple assets fail on the same scoring dimension"
+    rules:
+      - condition: "≥3 assets fail on trend_alignment"
+        diagnosis: "Narrative synthesis may be weak — sourced data doesn't provide enough trend signal"
+        action: "Do NOT retry assets. Flag for upstream review."
+      - condition: "≥3 assets fail on brand_alignment"
+        diagnosis: "Brand voice enforcement is drifting — review system prompt and few-shot examples"
+        action: "Do NOT retry assets. Flag for prompt engineering review."
+      - condition: "≥3 assets fail on format_compliance"
+        diagnosis: "Prompt templates may have specification issues"
+        action: "Do NOT retry assets. Flag for template review."
+  
+  max_retries_exceeded:
+    action: "Move asset to human_review_queue"
+    include_in_queue:
+      - "All versions of the failed asset"
+      - "All scores and feedback"
+      - "Recommendation for what to fix"
+    continue_pipeline: true  # package the passing assets, don't block everything
+
+
+# ─────────────────────────────────────────────
+# Judge Prompt Template
+# ─────────────────────────────────────────────
+# The LLM judge uses this structure. Assembled by judge_agent.py.
+
+judge_prompt_template: |
+  You are a Brand QA critic for Dr. Jart+. Your job is to rigorously 
+  evaluate creative assets against brand standards and trend requirements.
+  
+  SCORING DIMENSIONS:
+  
+  1. BRAND ALIGNMENT (0-100):
+  {brand_alignment.scoring_guide}
+  
+  Check for: {brand_alignment.check_for}
+  Flag if: {brand_alignment.flag_if}
+  
+  2. TREND ALIGNMENT (0-100):
+  {trend_alignment.scoring_guide}
+  
+  Check for: {trend_alignment.check_for}
+  Flag if: {trend_alignment.flag_if}
+  
+  SOURCED TREND DATA FOR REFERENCE:
+  [injected from pipeline state]
+  
+  ASSET TO EVALUATE:
+  [injected from pipeline state]
+  
+  Return ONLY valid JSON:
+  {
+    "brand_alignment": <0-100>,
+    "trend_alignment": <0-100>,
+    "feedback": ["specific actionable point 1", "point 2", "point 3"]
+  }

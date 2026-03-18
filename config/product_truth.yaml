@@ -1,0 +1,85 @@
+# ─────────────────────────────────────────────
+# Product Truth Registry
+# ─────────────────────────────────────────────
+# The system can ONLY make claims that exist here
+# or in the source registry. This prevents the LLM
+# from hallucinating product facts.
+# ─────────────────────────────────────────────
+
+product:
+  name: "Ceramidin™ Skin Barrier Moisturizing Cream"
+  brand: "Dr. Jart+"
+  line: "Ceramidin™"
+  price: "$48"
+  size: "50ml / 1.69 fl.oz"
+  url: "https://www.drjart.com/product/ceramidin-skin-barrier-moisturizing-cream"
+
+# ─── What the system IS allowed to say ───
+approved_claims:
+  - "Contains a 5-ceramide complex"
+  - "Includes panthenol (vitamin B5)"
+  - "Buttery-rich, non-greasy texture"
+  - "Clinically tested"
+  - "Dermatologist-backed"
+  - "Strengthens and repairs the skin barrier"
+  - "Moisturizes and boosts elasticity"
+  - "Suitable for sensitive skin"
+  - "Fragrance free"
+  - "Dermatologist tested"
+  - "#1 bestseller in Dr. Jart+ portfolio"
+  - "Made in Korea"
+  - "Part of the Ceramidin™ collection"
+
+# ─── What the system must NEVER say ───
+blocked_claims:
+  - "Cures eczema"
+  - "Cures acne"
+  - "Medical-grade treatment"
+  - "Dermatologist-prescribed"
+  - "Clinically proven to reverse aging"
+  - "FDA approved"
+  - "Eliminates wrinkles"
+  - "Replaces prescription skincare"
+
+blocked_language:
+  - "cure"
+  - "treat"       # as in medical treatment
+  - "heal"        # implies medical claims
+  - "prescription"
+  - "miracle"
+  - "magic"
+  - "instant transformation"
+  - "guaranteed results"
+  - "anti-aging miracle"
+
+# ─── Ingredient facts (must be accurate) ───
+key_ingredients:
+  - name: "5-Ceramide Complex"
+    function: "Reinforces skin barrier, prevents moisture loss"
+    detail: "Five types of ceramides that mimic the skin's natural lipid structure"
+  - name: "Panthenol (Vitamin B5)"
+    function: "Soothes, moisturizes, and supports skin healing"
+  - name: "Shea Butter"
+    function: "Rich moisturization and skin softening"
+
+# ─── Competitive positioning (for trend alignment) ───
+competitors:
+  - name: "CeraVe Moisturizing Cream"
+    positioning_gap: "No K-beauty heritage, pharmacy/clinical positioning, no lifestyle appeal"
+    note: "Never disparage directly — only use to inform our own positioning"
+  - name: "La Roche-Posay Cicaplast Baume B5"
+    positioning_gap: "Medical/clinical only, no creative or lifestyle narrative"
+    note: "Strong in derm channel but lacks brand personality"
+  - name: "Aestura Atobarrier 365 Cream"
+    positioning_gap: "Korea-only awareness, no global brand recognition"
+    note: "Strong formulation but limited market presence"
+  - name: "Drunk Elephant Lala Retro Whipped Cream"
+    positioning_gap: "Premium price point ($68), not specifically positioned for barrier repair"
+    note: "Lifestyle brand but barrier repair is not their core story"
+
+# ─── Rules for using this registry ───
+rules:
+  never_disparage_competitors: true
+  never_make_medical_claims: true
+  always_use_trademark_symbol: true  # Ceramidin™ not Ceramidin
+  require_source_for_statistics: true  # any number/percentage must link to a source record

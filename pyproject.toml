@@ -1,0 +1,20 @@
+[project]
+name = "pencil-task"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.85.0",
+    "fastapi>=0.135.1",
+    "httpx>=0.28.1",
+    "langchain-anthropic>=1.4.0",
+    "langchain-core>=1.2.19",
+    "langgraph>=1.1.2",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.13.1",
+    "python-dateutil>=2.9.0.post0",
+    "python-dotenv>=1.2.2",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.42.0",
+]
