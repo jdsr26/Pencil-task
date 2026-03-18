@@ -289,13 +289,30 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
     assets = state.get("assets", {})
     iteration_counts = state.get("iteration_counts", {})
     human_review_queue = state.get("human_review_queue", [])
+    campaign_coherence = state.get("campaign_coherence", {})
 
     # ─── STEP 1: Who passed? Who failed? ───
     failing = _get_failing_assets(scores)
     passing = _get_passing_assets(scores)
 
+    # ─── STEP 1b: Check campaign-level coherence (Tier 3) ───
+    # Even if all individual assets pass, incoherence across the bundle is a failure.
+    coherence_issues = []
+    if isinstance(campaign_coherence, dict) and not campaign_coherence.get("coherent", True):
+        coherence_issues = campaign_coherence.get("issues", [])
+
     # ─── STEP 2: Check for PATTERN FAILURE (upstream diagnosis) ───
     pattern_detected, diagnosis = _diagnose_failure_pattern(scores)
+
+    # Append coherence diagnosis to pattern diagnosis if both triggered
+    if coherence_issues:
+        coherence_note = (
+            "CAMPAIGN COHERENCE FAILURE: Assets passed individual scoring but "
+            f"failed cross-asset consistency checks: {'; '.join(coherence_issues)}. "
+            "Review narrative synthesis to ensure consistent product + tone signal."
+        )
+        diagnosis = (diagnosis + " | " + coherence_note) if diagnosis else coherence_note
+        pattern_detected = True
 
     # ─── STEP 3: Check retry limits ───
     retryable, exhausted = _check_max_retries(failing, iteration_counts, max_retries)

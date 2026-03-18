@@ -7,6 +7,7 @@ const ASSET_LABELS = {
 
 export default function ScorePanel({ result }) {
   const scores = result?.scores || {};
+  const coherence = result?.campaign_metadata?.campaign_coherence || result?.campaign_coherence || null;
 
   return (
     <div>
@@ -114,6 +115,63 @@ export default function ScorePanel({ result }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Campaign Coherence — Tier 3 */}
+      {coherence && (
+        <div style={{
+          marginTop: 20,
+          background: "var(--bg-card)",
+          borderRadius: 16,
+          border: `1px solid ${coherence.coherent ? "#a7f3d0" : "#fca5a5"}`,
+          overflow: "hidden",
+          boxShadow: "var(--shadow-sm)",
+        }}>
+          <div style={{
+            padding: "14px 20px",
+            background: coherence.coherent ? "var(--accent-green-light)" : "var(--accent-red-light)",
+            borderBottom: "1px solid var(--border)",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 16 }}>⬡</span>
+              <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>Campaign Coherence</span>
+              <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 500 }}>Tier 3 · Cross-asset consistency</span>
+            </div>
+            <span style={{
+              padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700,
+              color: coherence.coherent ? "var(--accent-green)" : "var(--accent-red)",
+              background: coherence.coherent ? "#d1fae5" : "#fee2e2",
+            }}>
+              {coherence.coherent ? "✓ COHERENT" : "✗ ISSUES FOUND"}
+            </span>
+          </div>
+          <div style={{ padding: "14px 20px", display: "flex", gap: 24, flexWrap: "wrap" }}>
+            {[
+              { label: "Product Consistent", val: coherence.product_consistent },
+              { label: "Narrative Consistent", val: coherence.narrative_consistent },
+              { label: "Tone Consistent", val: coherence.tone_consistent },
+              { label: "CTA Aligned", val: coherence.cta_aligned },
+            ].map(({ label, val }) => (
+              <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13 }}>
+                <span style={{ fontWeight: 700, color: val ? "var(--accent-green)" : "var(--accent-red)" }}>
+                  {val ? "✓" : "✗"}
+                </span>
+                <span style={{ color: "var(--text-secondary)" }}>{label}</span>
+              </div>
+            ))}
+          </div>
+          {coherence.issues && coherence.issues.length > 0 && (
+            <div style={{ padding: "0 20px 14px" }}>
+              {coherence.issues.map((issue, i) => (
+                <div key={i} style={{
+                  fontSize: 12, color: "var(--accent-red)", marginBottom: 4,
+                  paddingLeft: 12, borderLeft: "3px solid #fca5a5",
+                }}>{issue}</div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

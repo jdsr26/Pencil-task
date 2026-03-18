@@ -77,11 +77,28 @@ def score_campaign(state: Dict[str, Any]) -> Dict[str, Any]:
             narrative_consistent = False
             issues.append(f"{asset_type} does not reference barrier repair narrative")
 
-    # Check 3: CTA alignment — check if CTAs point in compatible directions
-    cta_aligned = True  # Simplified for MVP
+    # Check 3: CTA alignment — ensure no conflicting purchase signals
+    # (e.g. one asset says "shop now" while another says "not available yet")
+    unavailable_signals = ["coming soon", "not available", "out of stock", "waitlist"]
+    available_signals = ["shop now", "buy now", "get it now", "available at", "order now"]
+    has_unavailable = any(
+        sig in content for content in asset_contents.values() for sig in unavailable_signals
+    )
+    has_available = any(
+        sig in content for content in asset_contents.values() for sig in available_signals
+    )
+    cta_aligned = not (has_unavailable and has_available)
+    if not cta_aligned:
+        issues.append("CTA conflict: some assets signal availability while others signal unavailability")
 
-    # Check 4: Tone consistency — simplified check
-    tone_consistent = True  # Full version would use LLM
+    # Check 4: Tone consistency — detect forbidden patterns across assets
+    # Full LLM-based tone scoring would run here in production
+    forbidden_signals = ["cure", "prescription", "miracle", "guaranteed results", "instant transformation"]
+    tone_consistent = True
+    for asset_type, content in asset_contents.items():
+        if any(sig in content for sig in forbidden_signals):
+            tone_consistent = False
+            issues.append(f"{asset_type} contains forbidden language that violates brand tone")
 
     coherent = product_consistent and narrative_consistent and tone_consistent and cta_aligned
 

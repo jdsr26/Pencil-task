@@ -80,7 +80,7 @@ def package(state: Dict[str, Any]) -> Dict[str, Any]:
         ),
 
         # Product & trend
-        "anchor_product": "Ceramidin™ Skin Barrier Moisturizing Cream",
+        "anchor_product": state.get("product", "ceramidin_cream"),
         "brand": "Dr. Jart+",
         "trend_narrative": "Barrier Repair + Skin Longevity 2026",
         "trend_narratives_used": state.get("trend_narratives", []),
@@ -112,6 +112,7 @@ def package(state: Dict[str, Any]) -> Dict[str, Any]:
         # Diagnostics
         "failure_diagnosis": failure_diagnosis,
         "human_review_queue": human_review_queue,
+        "campaign_coherence": state.get("campaign_coherence", {}),
 
         # Observability
         "audit_log_entries": len(state.get("audit_log", [])),
