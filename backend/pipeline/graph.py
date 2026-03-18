@@ -18,7 +18,7 @@ Flow:
        ↓
   narrative_synth → generate_assets → score_deterministic
        ↓                                      ↓
-  ┌────────── route_decision ←── score_llm_judge
+  ┌────────── route_decision ←── score_campaign ←── score_llm_judge
   │               │
   │    ┌──────────┼──────────┐
   │    ↓          ↓          ↓
@@ -30,8 +30,7 @@ Flow:
 
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, Literal
-
+from typing import Dict, Any
 from langgraph.graph import StateGraph, END
 
 from backend.pipeline.nodes.source_collect import source_collect
@@ -40,8 +39,10 @@ from backend.pipeline.nodes.narrative_synth import narrative_synth
 from backend.pipeline.nodes.generate_assets import generate_assets
 from backend.pipeline.nodes.score_deterministic import score_deterministic
 from backend.pipeline.nodes.score_llm_judge import score_llm_judge
+from backend.pipeline.nodes.score_campaign import score_campaign   # NEW
 from backend.pipeline.nodes.route_decision import route_decision
 from backend.pipeline.nodes.package import package
+
 
 
 # ─────────────────────────────────────────────
@@ -57,7 +58,7 @@ from typing import TypedDict, List, Optional
 class GraphState(TypedDict, total=False):
     """
     LangGraph state schema.
-    
+
     total=False means all keys are optional — nodes return
     partial updates, not the full state every time.
     LangGraph merges each node's return into the accumulated state.
@@ -65,6 +66,7 @@ class GraphState(TypedDict, total=False):
     # Run metadata
     run_id: str
     trigger: str
+    product: str          # Selected anchor product key
     started_at: str
     completed_at: str
     status: str
@@ -152,8 +154,9 @@ def build_graph() -> StateGraph:
       4. generate_assets
       5. score_deterministic
       6. score_llm_judge
-      7. route_decision
-      8. package
+      7. score_campaign      (cross-asset coherence gate)
+      8. route_decision
+      9. package
     
     With retry loop:
       ... → route_decision → generate_assets → score_deterministic →
@@ -170,6 +173,7 @@ def build_graph() -> StateGraph:
     graph.add_node("generate_assets", generate_assets)
     graph.add_node("score_deterministic", score_deterministic)
     graph.add_node("score_llm_judge", score_llm_judge)
+    graph.add_node("score_campaign", score_campaign)
     graph.add_node("route_decision", route_decision)
     graph.add_node("package", package)
 
@@ -199,8 +203,11 @@ def build_graph() -> StateGraph:
     # score_deterministic → score_llm_judge (always)
     graph.add_edge("score_deterministic", "score_llm_judge")
 
-    # score_llm_judge → route_decision (always)
-    graph.add_edge("score_llm_judge", "route_decision")
+    # score_llm_judge → score_campaign (always) — Tier 3: cross-asset coherence
+    graph.add_edge("score_llm_judge", "score_campaign")
+
+    # score_campaign → route_decision (always)
+    graph.add_edge("score_campaign", "route_decision")
 
     # route_decision → conditional: generate_assets (retry) OR package (done)
     graph.add_conditional_edges(
@@ -225,16 +232,17 @@ def build_graph() -> StateGraph:
 # Pipeline Runner
 # ─────────────────────────────────────────────
 
-def create_initial_state(trigger: str = "manual") -> GraphState:
+def create_initial_state(trigger: str = "manual", product: str = "ceramidin_cream") -> GraphState:
     """
     Create the initial state for a pipeline run.
-    
+
     This is what gets passed to graph.invoke().
     All fields start empty/default — each node populates its section.
     """
     return {
         "run_id": str(uuid.uuid4())[:8],
         "trigger": trigger,
+        "product": product,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "status": "initialized",
         "sourced_records": [],
@@ -254,7 +262,7 @@ def create_initial_state(trigger: str = "manual") -> GraphState:
     }
 
 
-def run_pipeline(trigger: str = "manual") -> Dict[str, Any]:
+def run_pipeline(trigger: str = "manual", product: str = "ceramidin_cream") -> Dict[str, Any]:
     """
     Execute the complete pipeline.
     
@@ -280,7 +288,7 @@ def run_pipeline(trigger: str = "manual") -> Dict[str, Any]:
     graph = build_graph()
 
     # Create initial state
-    initial_state = create_initial_state(trigger=trigger)
+    initial_state = create_initial_state(trigger=trigger, product=product)
 
     # Run the pipeline
     print(f"\n{'='*60}")

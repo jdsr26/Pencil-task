@@ -1,36 +1,138 @@
 # ─────────────────────────────────────────────
-# Product Truth Registry
+# Product Truth Registry — Multi-Product
 # ─────────────────────────────────────────────
 # The system can ONLY make claims that exist here
 # or in the source registry. This prevents the LLM
 # from hallucinating product facts.
+#
+# Products are keyed by product_id (matches state["product"]).
+# Default / legacy top-level keys still work for Ceramidin™.
 # ─────────────────────────────────────────────
 
-product:
-  name: "Ceramidin™ Skin Barrier Moisturizing Cream"
-  brand: "Dr. Jart+"
-  line: "Ceramidin™"
-  price: "$48"
-  size: "50ml / 1.69 fl.oz"
-  url: "https://www.drjart.com/product/ceramidin-skin-barrier-moisturizing-cream"
+products:
 
-# ─── What the system IS allowed to say ───
-approved_claims:
-  - "Contains a 5-ceramide complex"
-  - "Includes panthenol (vitamin B5)"
-  - "Buttery-rich, non-greasy texture"
-  - "Clinically tested"
-  - "Dermatologist-backed"
-  - "Strengthens and repairs the skin barrier"
-  - "Moisturizes and boosts elasticity"
-  - "Suitable for sensitive skin"
-  - "Fragrance free"
-  - "Dermatologist tested"
-  - "#1 bestseller in Dr. Jart+ portfolio"
-  - "Made in Korea"
-  - "Part of the Ceramidin™ collection"
+  ceramidin_cream:
+    product:
+      name: "Ceramidin™ Skin Barrier Moisturizing Cream"
+      brand: "Dr. Jart+"
+      line: "Ceramidin™"
+      price: "$48"
+      size: "50ml / 1.69 fl.oz"
+      url: "https://www.drjart.com/product/ceramidin-skin-barrier-moisturizing-cream"
+    approved_claims:
+      - "Contains a 5-ceramide complex"
+      - "Includes panthenol (vitamin B5)"
+      - "Buttery-rich, non-greasy texture"
+      - "Clinically tested"
+      - "Dermatologist-backed"
+      - "Strengthens and repairs the skin barrier"
+      - "Moisturizes and boosts elasticity"
+      - "Suitable for sensitive skin"
+      - "Fragrance free"
+      - "Dermatologist tested"
+      - "#1 bestseller in Dr. Jart+ portfolio"
+      - "Made in Korea"
+      - "Part of the Ceramidin™ collection"
+    key_ingredients:
+      - name: "5-Ceramide Complex"
+        function: "Reinforces skin barrier, prevents moisture loss"
+        detail: "Five types of ceramides that mimic the skin's natural lipid structure"
+      - name: "Panthenol (Vitamin B5)"
+        function: "Soothes, moisturizes, and supports skin healing"
+      - name: "Shea Butter"
+        function: "Rich moisturization and skin softening"
+    competitors:
+      - name: "CeraVe Moisturizing Cream"
+        positioning_gap: "No K-beauty heritage, pharmacy/clinical positioning, no lifestyle appeal"
+        note: "Never disparage directly — only use to inform our own positioning"
+      - name: "La Roche-Posay Cicaplast Baume B5"
+        positioning_gap: "Medical/clinical only, no creative or lifestyle narrative"
+        note: "Strong in derm channel but lacks brand personality"
+      - name: "Drunk Elephant Lala Retro Whipped Cream"
+        positioning_gap: "Premium price point ($68), not specifically positioned for barrier repair"
+        note: "Lifestyle brand but barrier repair is not their core story"
 
-# ─── What the system must NEVER say ───
+  cicapair_treatment:
+    product:
+      name: "Cicapair™ Tiger Grass Color Correcting Treatment"
+      brand: "Dr. Jart+"
+      line: "Cicapair™"
+      price: "$52"
+      size: "30ml / 1.0 fl.oz"
+      url: "https://www.drjart.com/product/cicapair-tiger-grass-color-correcting-treatment"
+    approved_claims:
+      - "Contains Tiger Grass (Centella Asiatica)"
+      - "SPF 30 PA++ sun protection"
+      - "Neutralizes redness with green color correction"
+      - "Soothes and calms irritated and sensitive skin"
+      - "Clinically tested"
+      - "Dermatologist-tested"
+      - "Suitable for reactive and sensitive skin"
+      - "Part of the Cicapair™ collection"
+      - "Made in Korea"
+      - "Calming + color correcting in one step"
+      - "Reduces the appearance of redness"
+      - "Lightweight, blendable texture"
+    key_ingredients:
+      - name: "Tiger Grass (Centella Asiatica)"
+        function: "Soothes inflammation, strengthens skin, reduces redness"
+        detail: "Traditional Korean herbal remedy known for its calming and regenerative properties"
+      - name: "Niacinamide"
+        function: "Evens skin tone, minimizes pores, brightens complexion"
+      - name: "Green Pigments"
+        function: "Optical color correction — neutralizes redness on application"
+    competitors:
+      - name: "IT Cosmetics CC+ Cream"
+        positioning_gap: "Heavy coverage, no targeted redness/calming story, no K-beauty identity"
+        note: "Never disparage directly"
+      - name: "Erborian CC Red Correct"
+        positioning_gap: "Niche brand, limited global awareness, no dermatological framing"
+        note: "Similar concept but limited reach"
+      - name: "Clinique Redness Solutions"
+        positioning_gap: "Clinical/pharmaceutical aesthetic, lacks brand personality and lifestyle appeal"
+        note: "Strong in derm channel but no creative narrative"
+
+  dermask_micro_jet:
+    product:
+      name: "Dermask™ Micro Jet Clearing Solution"
+      brand: "Dr. Jart+"
+      line: "Dermask™"
+      price: "$36"
+      size: "30ml / 1.0 fl.oz"
+      url: "https://www.drjart.com/product/dermask-micro-jet-clearing-solution"
+    approved_claims:
+      - "Micro jet delivery technology for deep pore care"
+      - "Contains salicylic acid for blemish control"
+      - "Clears and minimizes the appearance of pores"
+      - "Targets congested and acne-prone skin"
+      - "Clinically tested"
+      - "Dermatologist-tested"
+      - "Part of the Dermask™ collection"
+      - "Made in Korea"
+      - "Oil-control and clarifying formula"
+      - "Lightweight, non-comedogenic"
+    key_ingredients:
+      - name: "Salicylic Acid (BHA)"
+        function: "Exfoliates inside pores, reduces blackheads and breakouts"
+        detail: "Beta-hydroxy acid that penetrates oil to clear congested pores"
+      - name: "Niacinamide"
+        function: "Regulates sebum, minimizes pores, brightens skin tone"
+      - name: "Zinc PCA"
+        function: "Controls excess oil production, antibacterial properties"
+    competitors:
+      - name: "Paula's Choice BHA Exfoliant"
+        positioning_gap: "Single-ingredient focus, no experiential or lifestyle appeal, no K-beauty story"
+        note: "Never disparage directly"
+      - name: "The Ordinary Salicylic Acid 2%"
+        positioning_gap: "Bare-bones functional product, no brand narrative or prestige positioning"
+        note: "Commodity product vs premium K-beauty experience"
+      - name: "Clinique Clarifying Lotion"
+        positioning_gap: "Traditional toner format, no innovation story, dated positioning"
+        note: "Classic brand but lacks modern skin science narrative"
+
+# ─────────────────────────────────────────────
+# Shared rules — apply to ALL products
+# ─────────────────────────────────────────────
 blocked_claims:
   - "Cures eczema"
   - "Cures acne"
@@ -43,8 +145,8 @@ blocked_claims:
 
 blocked_language:
   - "cure"
-  - "treat"       # as in medical treatment
-  - "heal"        # implies medical claims
+  - "treat"
+  - "heal"
   - "prescription"
   - "miracle"
   - "magic"
@@ -52,34 +154,8 @@ blocked_language:
   - "guaranteed results"
   - "anti-aging miracle"
 
-# ─── Ingredient facts (must be accurate) ───
-key_ingredients:
-  - name: "5-Ceramide Complex"
-    function: "Reinforces skin barrier, prevents moisture loss"
-    detail: "Five types of ceramides that mimic the skin's natural lipid structure"
-  - name: "Panthenol (Vitamin B5)"
-    function: "Soothes, moisturizes, and supports skin healing"
-  - name: "Shea Butter"
-    function: "Rich moisturization and skin softening"
-
-# ─── Competitive positioning (for trend alignment) ───
-competitors:
-  - name: "CeraVe Moisturizing Cream"
-    positioning_gap: "No K-beauty heritage, pharmacy/clinical positioning, no lifestyle appeal"
-    note: "Never disparage directly — only use to inform our own positioning"
-  - name: "La Roche-Posay Cicaplast Baume B5"
-    positioning_gap: "Medical/clinical only, no creative or lifestyle narrative"
-    note: "Strong in derm channel but lacks brand personality"
-  - name: "Aestura Atobarrier 365 Cream"
-    positioning_gap: "Korea-only awareness, no global brand recognition"
-    note: "Strong formulation but limited market presence"
-  - name: "Drunk Elephant Lala Retro Whipped Cream"
-    positioning_gap: "Premium price point ($68), not specifically positioned for barrier repair"
-    note: "Lifestyle brand but barrier repair is not their core story"
-
-# ─── Rules for using this registry ───
 rules:
   never_disparage_competitors: true
   never_make_medical_claims: true
-  always_use_trademark_symbol: true  # Ceramidin™ not Ceramidin
-  require_source_for_statistics: true  # any number/percentage must link to a source record
+  always_use_trademark_symbol: true
+  require_source_for_statistics: true

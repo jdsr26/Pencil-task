@@ -2,39 +2,108 @@ export default function SourcePanel({ result }) {
   const meta = result?.campaign_metadata || {};
   const narratives = result?.trend_narratives || [];
 
-  // Get source info from audit log
-  const sourceAudit = (result?.audit_log || []).find(e => e?.node === "source_collect") || (result ? {} : null);
-
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: "var(--text-primary)", marginBottom: 4 }}>Phase 1: Sourcing</h2>
-      <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 24 }}>Trend Scout Agent — identifies, filters, and structures public trend data</p>
+      <PageHeader
+        phase="Phase 1"
+        title="Trend Sourcing"
+        desc="The Trend Scout Agent identifies, filters, and structures public trend data to fuel the creative pipeline."
+        color="var(--accent-green)"
+        bg="var(--accent-green-light)"
+      />
 
-      {/* Evidence decision */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
-        <InfoCard label="Records" value={meta.sourced_records_count || "—"} />
-        <InfoCard label="Synthetic" value={meta.synthetic_records_count || 0} />
-        <InfoCard label="Evidence" value={meta.evidence_decision || "—"} color={meta.evidence_decision === "sufficient" ? "#00d4aa" : "#ffc107"} />
+      {/* Stats row */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14, marginBottom: 28 }}>
+        <StatCard
+          label="Records Sourced"
+          value={meta.sourced_records_count ?? "—"}
+          color="var(--accent-blue)"
+          bg="var(--accent-blue-light)"
+          icon="◈"
+        />
+        <StatCard
+          label="Synthetic Records"
+          value={meta.synthetic_records_count ?? 0}
+          color="var(--accent-purple)"
+          bg="var(--accent-purple-light)"
+          icon="✦"
+        />
+        <StatCard
+          label="Evidence Decision"
+          value={meta.evidence_decision ?? "—"}
+          color={meta.evidence_decision === "sufficient" ? "var(--accent-green)" : "var(--accent-yellow)"}
+          bg={meta.evidence_decision === "sufficient" ? "var(--accent-green-light)" : "var(--accent-yellow-light)"}
+          icon={meta.evidence_decision === "sufficient" ? "✓" : "⚠"}
+        />
       </div>
 
       {/* Narratives */}
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 12 }}>Trend Narratives</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
+        Trend Narratives
+      </div>
+
       {narratives.length > 0 ? narratives.map((n, i) => (
-        <div key={i} style={{ background: "var(--bg-card)", borderRadius: 8, padding: 12, marginBottom: 8, borderLeft: "3px solid var(--accent-blue)", fontSize: 12, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-          <span style={{ color: "var(--accent-blue)", fontWeight: 700 }}>Narrative {i+1}:</span> {n}
+        <div key={i} style={{
+          background: "var(--bg-card)",
+          borderRadius: 12,
+          padding: "18px 20px",
+          marginBottom: 10,
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-sm)",
+          display: "flex",
+          gap: 16,
+          alignItems: "flex-start",
+        }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+            background: "var(--accent-blue-light)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 13, fontWeight: 800, color: "var(--accent-blue)",
+          }}>{i + 1}</div>
+          <div style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7, paddingTop: 4 }}>{n}</div>
         </div>
       )) : (
-        <div style={{ color: "var(--text-muted)", fontSize: 12 }}>Run the pipeline to see narratives</div>
+        <EmptyState message="Run the pipeline to discover trend narratives" />
       )}
     </div>
   );
 }
 
-function InfoCard({ label, value, color = "var(--text-primary)" }) {
+function StatCard({ label, value, color, bg, icon }) {
   return (
-    <div style={{ background: "var(--bg-card)", borderRadius: 8, padding: 12, flex: 1, border: "1px solid var(--border)" }}>
-      <div style={{ fontSize: 10, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 18, fontWeight: 700, color }}>{value}</div>
+    <div style={{
+      background: "var(--bg-card)",
+      borderRadius: 14,
+      padding: "18px 20px",
+      border: "1px solid var(--border)",
+      boxShadow: "var(--shadow-sm)",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.8 }}>{label}</div>
+        <div style={{ width: 30, height: 30, borderRadius: 8, background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color }}>{icon}</div>
+      </div>
+      <div style={{ fontSize: 22, fontWeight: 800, color, textTransform: "capitalize" }}>{value}</div>
+    </div>
+  );
+}
+
+function PageHeader({ phase, title, desc, color, bg }) {
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, color, background: bg, textTransform: "uppercase", letterSpacing: 0.8 }}>{phase}</span>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>{title}</h2>
+      <p style={{ fontSize: 14, color: "var(--text-muted)", maxWidth: 560, lineHeight: 1.6 }}>{desc}</p>
+    </div>
+  );
+}
+
+function EmptyState({ message }) {
+  return (
+    <div style={{ textAlign: "center", padding: "50px 40px", color: "var(--text-muted)" }}>
+      <div style={{ fontSize: 32, marginBottom: 12, opacity: 0.4 }}>◎</div>
+      <div style={{ fontSize: 14 }}>{message}</div>
     </div>
   );
 }

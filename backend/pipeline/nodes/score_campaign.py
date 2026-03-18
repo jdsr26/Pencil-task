@@ -53,8 +53,16 @@ def score_campaign(state: Dict[str, Any]) -> Dict[str, Any]:
 
     issues = []
 
+    # Resolve product terms from state — allows any anchor product to be checked
+    product_key = state.get("product", "ceramidin_cream")
+    product_term_map = {
+        "ceramidin_cream": ["ceramidin", "dr. jart", "dr jart"],
+        "cicapair_treatment": ["cicapair", "tiger grass", "dr. jart", "dr jart"],
+        "dermask_micro_jet": ["dermask", "micro jet", "dr. jart", "dr jart"],
+    }
+    product_terms = product_term_map.get(product_key, ["dr. jart", "dr jart"])
+
     # Check 1: Product consistency — all assets mention the same product
-    product_terms = ["ceramidin", "dr. jart", "dr jart"]
     product_consistent = True
     for asset_type, content in asset_contents.items():
         if not any(term in content for term in product_terms):

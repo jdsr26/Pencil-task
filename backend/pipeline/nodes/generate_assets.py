@@ -164,9 +164,10 @@ def generate_assets(state: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Partial state update with generated assets + audit entries
     """
-    # Load configs
+    # Load configs — use the anchor product selected for this run
     system_prompt = _load_brand_voice()
-    product_truth = ProductTruthRegistry()
+    product_key = state.get("product", "ceramidin_cream")
+    product_truth = ProductTruthRegistry(product_key=product_key)
 
     # Build shared context (same for all agents)
     context = _build_context(state, product_truth)

@@ -11,6 +11,7 @@ from typing import List, Dict, Any, Optional
 
 class RunRequest(BaseModel):
     trigger: str = "seasonal_spring"
+    product: str = "ceramidin_cream"
 
 
 class RunResponse(BaseModel):

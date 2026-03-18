@@ -61,11 +61,11 @@ import threading
 
 _active_runs = {}
 
-def _run_in_background(run_id: str, trigger: str):
+def _run_in_background(run_id: str, trigger: str, product: str = "ceramidin_cream"):
     """Execute pipeline in a background thread."""
     try:
         _active_runs[run_id] = {"status": "running"}
-        result = run_pipeline(trigger=trigger)
+        result = run_pipeline(trigger=trigger, product=product)
         actual_id = result.get("run_id", run_id)
         _run_results[actual_id] = result
         _active_runs[run_id] = {"status": "complete", "actual_run_id": actual_id}
@@ -92,7 +92,7 @@ def trigger_run(request: RunRequest):
     run_id = str(__import__("uuid").uuid4())[:8]
     thread = threading.Thread(
         target=_run_in_background,
-        args=(run_id, request.trigger),
+        args=(run_id, request.trigger, request.product),
         daemon=True,
     )
     thread.start()

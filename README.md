@@ -17,12 +17,16 @@ Generates a complete campaign bundle (Google Ads, video prompt, image prompt, bl
 ```
 source_collect → evidence_check → narrative_synth → generate_assets
                                                           ↓
-package ← route_decision ← score_llm_judge ← score_deterministic
-               ↑                                    
+                                                  score_deterministic
+                                                          ↓
+                                                   score_llm_judge
+                                                          ↓
+package ← route_decision ← score_campaign (cross-asset coherence)
+               ↑
                └──── RETRY (with targeted feedback) ─┘
 ```
 
-**8 pipeline nodes** orchestrated by LangGraph with conditional routing for self-correction.
+**9 pipeline nodes** orchestrated by LangGraph with conditional routing for self-correction.
 
 ## Key Design Decisions
 
@@ -39,7 +43,7 @@ package ← route_decision ← score_llm_judge ← score_deterministic
 ```bash
 # Clone and setup
 git clone <repo-url>
-cd drjart-content-pipeline
+cd Pencil-task
 
 # Install dependencies
 pip install -r requirements.txt

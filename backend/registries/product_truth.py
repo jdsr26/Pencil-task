@@ -3,6 +3,9 @@ Product Truth Registry
 ======================
 Loads and provides access to product_truth.yaml.
 The anti-hallucination layer for product claims.
+
+Supports multiple products — pass product_key to select
+which product's truth data to load into the pipeline.
 """
 
 import yaml
@@ -10,18 +13,28 @@ from pathlib import Path
 
 
 class ProductTruthRegistry:
-    """Loads product truth config and provides claim validation."""
+    """Loads product truth config for a specific anchor product."""
 
-    def __init__(self, config_path: str = "config/product_truth.yaml"):
+    def __init__(
+        self,
+        config_path: str = "config/product_truth.yaml",
+        product_key: str = "ceramidin_cream",
+    ):
         with open(config_path, "r") as f:
             self.config = yaml.safe_load(f)
-        
-        self.product = self.config.get("product", {})
-        self.approved_claims = self.config.get("approved_claims", [])
+
+        # Resolve product-specific section
+        products = self.config.get("products", {})
+        product_data = products.get(product_key) or products.get("ceramidin_cream", {})
+
+        self.product = product_data.get("product", {})
+        self.approved_claims = product_data.get("approved_claims", [])
+        self.key_ingredients = product_data.get("key_ingredients", [])
+        self.competitors = product_data.get("competitors", [])
+
+        # Shared rules apply to all products
         self.blocked_claims = self.config.get("blocked_claims", [])
         self.blocked_language = self.config.get("blocked_language", [])
-        self.key_ingredients = self.config.get("key_ingredients", [])
-        self.competitors = self.config.get("competitors", [])
         self.rules = self.config.get("rules", {})
 
     def is_claim_approved(self, claim: str) -> bool:
