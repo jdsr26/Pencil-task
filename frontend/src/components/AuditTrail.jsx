@@ -13,6 +13,7 @@ const ACTION_META = {
   bundle_assembled: { color: "var(--accent-purple)", bg: "var(--accent-purple-light)", label: "Bundle Assembled" },
   retry: { color: "var(--accent-yellow)", bg: "var(--accent-yellow-light)", label: "Retry" },
   all_passed: { color: "var(--accent-green)", bg: "var(--accent-green-light)", label: "All Passed" },
+  coherence_failure: { color: "var(--accent-yellow)", bg: "var(--accent-yellow-light)", label: "Coherence Failure" },
   pattern_failure: { color: "var(--accent-red)", bg: "var(--accent-red-light)", label: "Pattern Failure" },
 };
 

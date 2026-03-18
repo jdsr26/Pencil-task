@@ -10,22 +10,23 @@ This is the ORCHESTRATION BRAIN. It defines:
   - When to stop (all pass, pattern failure, max retries)
 
 The graph has one conditional edge — after route_decision,
-the pipeline either proceeds to package OR loops back to
-generate_assets with feedback injected.
+the pipeline either loops back to generate_assets with feedback
+injected, or proceeds to package (with one of four outcomes).
 
 Flow:
-  source_collect → evidence_check → [STOP if poor]
+  source_collect → evidence_check → [STOP if poor evidence]
        ↓
   narrative_synth → generate_assets → score_deterministic
-       ↓                                      ↓
-  ┌────────── route_decision ←── score_campaign ←── score_llm_judge
-  │               │
-  │    ┌──────────┼──────────┐
-  │    ↓          ↓          ↓
-  │  RETRY     PACKAGE    PACKAGE
-  │  (loop)   (all pass)  (pattern/exhausted)
-  │    │
-  └────┘
+       ↓                    ↑                ↓
+  ┌──────────────────── route_decision ← score_campaign ← score_llm_judge
+  │                          │
+  │         ┌────────────────┼──────────────────────────┐
+  │         ↓                ↓                          ↓
+  │       RETRY           PACKAGE                    PACKAGE
+  │    (individual       (all_passed /            (pattern_failure /
+  │     failures)       coherence_failure)        max_retries_exhausted)
+  │       + feedback
+  └───────────┘
 """
 
 import uuid
@@ -126,12 +127,21 @@ def should_continue_after_evidence(state: Dict[str, Any]) -> str:
 def should_retry_or_package(state: Dict[str, Any]) -> str:
     """
     After route_decision, decide whether to retry or package.
-    
+
     This is THE key conditional edge — the self-correction loop.
-    
-    route_decision sets state["next_node"] to either:
-      - "generate_assets" → retry failed assets with feedback
-      - "package" → proceed to final bundling
+
+    route_decision sets state["next_node"] based on five outcomes:
+      - "generate_assets" (decision=retry) — individual assets failed,
+        retries remain; feedback injected into assets for next attempt
+      - "package" (decision=all_passed) — all 4 assets passed individual
+        scoring AND campaign coherence check; happy path
+      - "package" (decision=coherence_failure) — all assets passed
+        individually but cross-asset coherence check failed; diagnosed
+        and sent to package with coherence issues flagged
+      - "package" (decision=pattern_failure) — 3+ assets failed on the
+        same scoring dimension; upstream fault diagnosed, retry skipped
+      - "package" (decision=max_retries_exhausted) — failing assets
+        exhausted max retries; sent to human review queue
     """
     next_node = state.get("next_node", "package")
     return next_node

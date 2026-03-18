@@ -4,11 +4,12 @@ Route Decision Node
 The smartest node in the pipeline. Makes routing decisions
 based on scoring results.
 
-Four possible outcomes:
-  1. ALL PASS → route to package (happy path)
-  2. INDIVIDUAL FAIL → inject feedback, route back to generate_assets
-  3. PATTERN FAILURE → diagnose upstream cause, DON'T retry
-  4. MAX RETRIES → move to human review queue, route to package
+Five possible outcomes:
+  1. ALL PASS + COHERENT → route to package (happy path)
+  2. ALL PASS + INCOHERENT → diagnose coherence failure, route to package with diagnosis
+  3. INDIVIDUAL FAIL → inject feedback, route back to generate_assets
+  4. PATTERN FAILURE → diagnose upstream cause, DON'T retry
+  5. MAX RETRIES → move to human review queue, route to package
 
 This node also performs UPSTREAM FAULT DIAGNOSIS:
   If ≥3 assets fail on the SAME dimension, the problem isn't
@@ -327,11 +328,19 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
         human_review_queue.append(asset_type)
 
     # ─── STEP 5: ROUTING DECISION ───
-    if len(failing) == 0:
-        # ✅ ALL PASS — happy path
+    if len(failing) == 0 and not coherence_issues:
+        # ✅ ALL PASS — individual scoring + campaign coherence both clear
         next_node = "package"
         decision = "all_passed"
-        decision_detail = f"All 4 assets passed scoring. Passing: {passing}"
+        decision_detail = f"All 4 assets passed scoring and campaign coherence check. Passing: {passing}"
+
+    elif len(failing) == 0 and coherence_issues:
+        # ⚠️ COHERENCE FAILURE — individual assets passed but bundle is incoherent.
+        # Retrying individual assets won't fix this — the issue is upstream
+        # (narrative synthesis or brand voice drift across asset types).
+        next_node = "package"
+        decision = "coherence_failure"
+        decision_detail = diagnosis
 
     elif pattern_detected:
         # ⚠️ PATTERN FAILURE — don't retry, diagnose upstream
