@@ -167,7 +167,9 @@ def generate_assets(state: Dict[str, Any]) -> Dict[str, Any]:
     # Load configs — use the anchor product selected for this run
     system_prompt = _load_brand_voice()
     product_key = state.get("product", "ceramidin_cream")
+    print(f"[generate_assets] anchor product: {product_key}")
     product_truth = ProductTruthRegistry(product_key=product_key)
+    print(f"[generate_assets] product name: {product_truth.product.get('name')}")
 
     # Build shared context (same for all agents)
     context = _build_context(state, product_truth)
