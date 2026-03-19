@@ -22,6 +22,7 @@ import re
 from typing import Dict, Any, List, Optional, Tuple
 
 from backend.agents.base_agent import BaseAgent
+from backend.prompting.generator_adapters import image_generator_instructions
 from backend.pipeline.state import AssetOutput, AuditEntry
 
 
@@ -32,7 +33,12 @@ class ImageAgent(BaseAgent):
     Output: A single prompt string ready to paste into an image generator.
     """
 
-    def __init__(self, system_prompt: str, model: Optional[str] = None):
+    def __init__(
+        self,
+        system_prompt: str,
+        model: Optional[str] = None,
+        target_generator: str = "midjourney-v6",
+    ):
         super().__init__(
             name="generate_assets.image",
             system_prompt=system_prompt,
@@ -40,15 +46,20 @@ class ImageAgent(BaseAgent):
             temperature=0.8,   # Slightly higher — image prompts benefit from more creativity
             max_tokens=800,    # Image prompts are concise — one dense paragraph + flags
         )
+        self.target_generator = target_generator
 
-    def get_task_prompt(self) -> str:
+    def get_task_prompt(self, product_name: str = "Dr. Jart+ product") -> str:
         """Image-specific generation instruction."""
-        return """Generate an image generation prompt optimized for Midjourney v6 
-for Dr. Jart+ Ceramidin™ Skin Barrier Moisturizing Cream.
+        generator_notes = image_generator_instructions(self.target_generator)
+        return f"""Generate an image generation prompt optimized for {self.target_generator} 
+    for {product_name}.
+
+    TARGET GENERATOR GUIDANCE:
+    {generator_notes}
 
 FORMAT REQUIREMENTS:
 - Single prompt paragraph (no scene breakdown — this is a still image)
-- Include Midjourney flags at the end: --ar [ratio] --style raw --v 6
+    - Include a ratio marker and style/version marker at the end (e.g., --ar [ratio] --style raw --v 6)
 - Recommended aspect ratio: --ar 1:1 for social, --ar 4:5 for Instagram feed
 - No text overlays in the image (text will be added in post-production)
 
@@ -70,7 +81,7 @@ VISUAL DETAILS TO INCLUDE:
 - Overall mood and color temperature
 
 OUTPUT FORMAT:
-Write the complete Midjourney prompt as a single paragraph, followed by the flags on the same line.
+Write the complete prompt as a single paragraph, followed by the markers on the same line.
 Do not add explanations, commentary, or multiple options. One prompt only.
 
 Example structure (DO NOT copy this — create original):
@@ -93,7 +104,7 @@ Example structure (DO NOT copy this — create original):
             Tuple of (AssetOutput, AuditEntry)
         """
         response_text, audit = self.call(
-            task=self.get_task_prompt(),
+            task=self.get_task_prompt(context.get("product_name", "Dr. Jart+ product")),
             context=context,
             feedback=feedback,
         )

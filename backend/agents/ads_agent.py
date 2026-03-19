@@ -44,13 +44,13 @@ class AdsAgent(BaseAgent):
             max_tokens=1000,   # Ads are short — no need for large output window
         )
 
-    def get_task_prompt(self) -> str:
+    def get_task_prompt(self, product_name: str = "Dr. Jart+ product") -> str:
         """
         The ads-specific generation instruction.
         This is the TASK section of the prompt.
         Context and corrections are handled by base_agent.build_prompt().
         """
-        return """Generate a Google Ads Responsive Search Ad set for Dr. Jart+ Ceramidin™ Skin Barrier Moisturizing Cream.
+        return f"""Generate a Google Ads Responsive Search Ad set for {product_name}.
 
 FORMAT REQUIREMENTS (strict):
 - Exactly 3 headlines, each ≤30 characters
@@ -96,7 +96,7 @@ Write ONLY the 6 lines above. No explanations, no commentary, no extra text."""
         """
         # Call the LLM through base class
         response_text, audit = self.call(
-            task=self.get_task_prompt(),
+            task=self.get_task_prompt(context.get("product_name", "Dr. Jart+ product")),
             context=context,
             feedback=feedback,
         )

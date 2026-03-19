@@ -106,7 +106,11 @@ def package(state: Dict[str, Any]) -> Dict[str, Any]:
         },
 
         # Model info
-        "model_used": "claude-sonnet-4-20250514",
+        "model_used": state.get("generation_model", "claude-sonnet-4-20250514"),
+        "generation_model": state.get("generation_model", "claude-sonnet-4-20250514"),
+        "judge_model": state.get("judge_model") or state.get("generation_model", "claude-sonnet-4-20250514"),
+        "image_generator": state.get("image_generator", "midjourney-v6"),
+        "video_generator": state.get("video_generator", "runway-gen4"),
         "pipeline_version": "1.0.0",
 
         # Diagnostics

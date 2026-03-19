@@ -128,7 +128,7 @@ def score_deterministic(state: Dict[str, Any]) -> Dict[str, Any]:
         Partial state update with deterministic scores per asset
     """
     # Load product truth for blocked language list
-    product_truth = ProductTruthRegistry()
+    product_truth = ProductTruthRegistry(product_key=state.get("product", "ceramidin_cream"))
     
     # Get source records for claim linking
     source_records = state.get("filtered_records", [])

@@ -141,6 +141,9 @@ def _build_context(
 
     return {
         "product": product_truth.get_product_context(),
+        "product_name": product_truth.product.get("name", "Dr. Jart+ product"),
+        "product_line": product_truth.product.get("line", "Dr. Jart+"),
+        "product_brand": product_truth.product.get("brand", "Dr. Jart+"),
         "trend_narratives": trend_narratives,
         "sourced_claims": sourced_claims,
         "competitor_gaps": [
@@ -172,12 +175,24 @@ def generate_assets(state: Dict[str, Any]) -> Dict[str, Any]:
     # Build shared context (same for all agents)
     context = _build_context(state, product_truth)
 
+    generation_model = state.get("generation_model", "claude-sonnet-4-20250514")
+    image_generator = state.get("image_generator", "midjourney-v6")
+    video_generator = state.get("video_generator", "runway-gen4")
+
     # Initialize agents
     agents = {
-        "ads": AdsAgent(system_prompt=system_prompt),
-        "video": VideoAgent(system_prompt=system_prompt),
-        "image": ImageAgent(system_prompt=system_prompt),
-        "blog": BlogAgent(system_prompt=system_prompt),
+        "ads": AdsAgent(system_prompt=system_prompt, model=generation_model),
+        "video": VideoAgent(
+            system_prompt=system_prompt,
+            model=generation_model,
+            target_generator=video_generator,
+        ),
+        "image": ImageAgent(
+            system_prompt=system_prompt,
+            model=generation_model,
+            target_generator=image_generator,
+        ),
+        "blog": BlogAgent(system_prompt=system_prompt, model=generation_model),
     }
 
     # Get current state

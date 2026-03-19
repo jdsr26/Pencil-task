@@ -1,10 +1,26 @@
 const API_BASE = "/api";
 
-export async function runPipeline(trigger = "seasonal_spring") {
+export async function runPipeline(
+  trigger = "seasonal_spring",
+  {
+    product = "ceramidin_cream",
+    generationModel = "claude-sonnet-4-20250514",
+    judgeModel = "claude-sonnet-4-20250514",
+    imageGenerator = "midjourney-v6",
+    videoGenerator = "runway-gen4",
+  } = {}
+) {
   const res = await fetch(`${API_BASE}/run`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ trigger }),
+    body: JSON.stringify({
+      trigger,
+      product,
+      generation_model: generationModel,
+      judge_model: judgeModel,
+      image_generator: imageGenerator,
+      video_generator: videoGenerator,
+    }),
   });
   if (!res.ok) throw new Error(`Pipeline failed: ${res.statusText}`);
   return res.json();
@@ -30,5 +46,11 @@ export async function listRuns() {
 
 export async function healthCheck() {
   const res = await fetch(`${API_BASE}/health`);
+  return res.json();
+}
+
+export async function getModelOptions() {
+  const res = await fetch(`${API_BASE}/models`);
+  if (!res.ok) throw new Error(`Failed to load model options: ${res.statusText}`);
   return res.json();
 }

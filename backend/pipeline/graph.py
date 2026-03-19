@@ -68,6 +68,10 @@ class GraphState(TypedDict, total=False):
     run_id: str
     trigger: str
     product: str          # Selected anchor product key
+    generation_model: str
+    judge_model: str
+    image_generator: str
+    video_generator: str
     started_at: str
     completed_at: str
     status: str
@@ -242,7 +246,14 @@ def build_graph() -> StateGraph:
 # Pipeline Runner
 # ─────────────────────────────────────────────
 
-def create_initial_state(trigger: str = "manual", product: str = "ceramidin_cream") -> GraphState:
+def create_initial_state(
+  trigger: str = "manual",
+  product: str = "ceramidin_cream",
+  generation_model: str = "claude-sonnet-4-20250514",
+  judge_model: str = "claude-sonnet-4-20250514",
+  image_generator: str = "midjourney-v6",
+  video_generator: str = "runway-gen4",
+) -> GraphState:
     """
     Create the initial state for a pipeline run.
 
@@ -253,6 +264,10 @@ def create_initial_state(trigger: str = "manual", product: str = "ceramidin_crea
         "run_id": str(uuid.uuid4())[:8],
         "trigger": trigger,
         "product": product,
+        "generation_model": generation_model,
+        "judge_model": judge_model,
+        "image_generator": image_generator,
+        "video_generator": video_generator,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "status": "initialized",
         "sourced_records": [],
@@ -272,7 +287,14 @@ def create_initial_state(trigger: str = "manual", product: str = "ceramidin_crea
     }
 
 
-def run_pipeline(trigger: str = "manual", product: str = "ceramidin_cream") -> Dict[str, Any]:
+def run_pipeline(
+  trigger: str = "manual",
+  product: str = "ceramidin_cream",
+  generation_model: str = "claude-sonnet-4-20250514",
+  judge_model: str = "claude-sonnet-4-20250514",
+  image_generator: str = "midjourney-v6",
+  video_generator: str = "runway-gen4",
+) -> Dict[str, Any]:
     """
     Execute the complete pipeline.
     
@@ -298,12 +320,23 @@ def run_pipeline(trigger: str = "manual", product: str = "ceramidin_cream") -> D
     graph = build_graph()
 
     # Create initial state
-    initial_state = create_initial_state(trigger=trigger, product=product)
+    initial_state = create_initial_state(
+      trigger=trigger,
+      product=product,
+      generation_model=generation_model,
+      judge_model=judge_model,
+      image_generator=image_generator,
+      video_generator=video_generator,
+    )
 
     # Run the pipeline
     print(f"\n{'='*60}")
     print(f"🚀 Starting pipeline run: {initial_state['run_id']}")
     print(f"   Trigger: {trigger}")
+    print(f"   Generation model: {generation_model}")
+    print(f"   Judge model: {judge_model}")
+    print(f"   Image generator: {image_generator}")
+    print(f"   Video generator: {video_generator}")
     print(f"   Started: {initial_state['started_at']}")
     print(f"{'='*60}\n")
 

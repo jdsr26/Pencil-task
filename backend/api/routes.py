@@ -16,6 +16,7 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 
 from backend.api.models import (
     RunRequest, RunResponse, BundleResponse, AuditLogResponse,
+    ALLOWED_MODELS, ALLOWED_IMAGE_GENERATORS, ALLOWED_VIDEO_GENERATORS,
 )
 from backend.pipeline.graph import run_pipeline
 
@@ -61,11 +62,26 @@ import threading
 
 _active_runs = {}
 
-def _run_in_background(run_id: str, trigger: str, product: str = "ceramidin_cream"):
+def _run_in_background(
+    run_id: str,
+    trigger: str,
+    product: str = "ceramidin_cream",
+    generation_model: str = "claude-sonnet-4-20250514",
+    judge_model: str = "claude-sonnet-4-20250514",
+    image_generator: str = "midjourney-v6",
+    video_generator: str = "runway-gen4",
+):
     """Execute pipeline in a background thread."""
     try:
         _active_runs[run_id] = {"status": "running"}
-        result = run_pipeline(trigger=trigger, product=product)
+        result = run_pipeline(
+            trigger=trigger,
+            product=product,
+            generation_model=generation_model,
+            judge_model=judge_model,
+            image_generator=image_generator,
+            video_generator=video_generator,
+        )
         actual_id = result.get("run_id", run_id)
         _run_results[actual_id] = result
         _active_runs[run_id] = {"status": "complete", "actual_run_id": actual_id}
@@ -92,7 +108,15 @@ def trigger_run(request: RunRequest):
     run_id = str(__import__("uuid").uuid4())[:8]
     thread = threading.Thread(
         target=_run_in_background,
-        args=(run_id, request.trigger, request.product),
+        args=(
+            run_id,
+            request.trigger,
+            request.product,
+            request.generation_model,
+            request.judge_model or request.generation_model,
+            request.image_generator,
+            request.video_generator,
+        ),
         daemon=True,
     )
     thread.start()
@@ -101,6 +125,23 @@ def trigger_run(request: RunRequest):
         status="running",
         message="Pipeline started. Poll /api/status/{run_id} for progress.",
     )
+
+
+@router.get("/models")
+def list_model_and_generator_options():
+    """Return allowlisted model and generator options for the frontend."""
+    return {
+        "generation_models": ALLOWED_MODELS,
+        "judge_models": ALLOWED_MODELS,
+        "image_generators": ALLOWED_IMAGE_GENERATORS,
+        "video_generators": ALLOWED_VIDEO_GENERATORS,
+        "defaults": {
+            "generation_model": "claude-sonnet-4-20250514",
+            "judge_model": "claude-sonnet-4-20250514",
+            "image_generator": "midjourney-v6",
+            "video_generator": "runway-gen4",
+        },
+    }
 
 
 @router.get("/status/{run_id}")

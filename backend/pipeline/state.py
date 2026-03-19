@@ -161,6 +161,10 @@ class PipelineState(BaseModel):
     # ─── Run Metadata ───
     run_id: str = ""
     trigger: TriggerType = TriggerType.MANUAL
+    generation_model: str = "claude-sonnet-4-20250514"
+    judge_model: str = "claude-sonnet-4-20250514"
+    image_generator: str = "midjourney-v6"
+    video_generator: str = "runway-gen4"
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
     status: str = "initialized"

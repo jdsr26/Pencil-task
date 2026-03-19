@@ -17,10 +17,11 @@ import os
 import time
 from typing import Optional, Dict, Any, List
 
-from anthropic import Anthropic
 from dotenv import load_dotenv
 
+from backend.llm import get_provider
 from backend.pipeline.state import AuditEntry
+from backend.prompting import PromptSpec, get_prompt_adapter
 from backend.observability.audit_log import (
     create_audit_entry,
     hash_prompt,
@@ -82,17 +83,10 @@ class BaseAgent:
         self.name = name
         self.system_prompt = system_prompt
         self.model = model or os.getenv("DEFAULT_MODEL", "claude-sonnet-4-20250514")
+        self.prompt_adapter = get_prompt_adapter(self.model)
+        self.provider = get_provider(self.model)
         self.temperature = temperature
         self.max_tokens = max_tokens
-        
-        # Initialize Anthropic client
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "ANTHROPIC_API_KEY not found in environment. "
-                "Copy .env.example to .env and add your key."
-            )
-        self.client = Anthropic(api_key=api_key)
 
     def build_prompt(
         self,
@@ -118,40 +112,12 @@ class BaseAgent:
         Returns:
             Assembled user prompt string
         """
-        sections = []
-
-        # Section 1: Context injection (knowledge layer)
-        if context:
-            context_parts = []
-            for key, value in context.items():
-                if isinstance(value, list):
-                    # Format lists cleanly (e.g., trend narratives, claims)
-                    items = "\n".join(f"  - {item}" for item in value)
-                    context_parts.append(f"{key.upper()}:\n{items}")
-                elif isinstance(value, dict):
-                    # Format dicts (e.g., product config)
-                    items = "\n".join(f"  {k}: {v}" for k, v in value.items())
-                    context_parts.append(f"{key.upper()}:\n{items}")
-                else:
-                    context_parts.append(f"{key.upper()}: {value}")
-            
-            sections.append("=== CONTEXT ===\n" + "\n\n".join(context_parts))
-
-        # Section 2: Task instruction
-        sections.append("=== TASK ===\n" + task)
-
-        # Section 3: Corrections from previous failures (self-correction mechanism)
-        if feedback and len(feedback) > 0:
-            corrections = "\n".join(f"  - {fb}" for fb in feedback)
-            sections.append(
-                "=== CRITICAL CORRECTIONS FROM PREVIOUS ATTEMPT ===\n"
-                "The previous version of this asset FAILED quality scoring.\n"
-                "You MUST fix these specific issues:\n"
-                f"{corrections}\n\n"
-                "Do NOT repeat these mistakes. Address each correction explicitly."
-            )
-
-        return "\n\n".join(sections)
+        spec = PromptSpec(
+            task=task,
+            context=context or {},
+            feedback=feedback,
+        )
+        return self.prompt_adapter.render(spec)
 
     def call(
         self,
@@ -196,25 +162,17 @@ class BaseAgent:
             start_time = time.time()
             
             try:
-                # Make the API call
-                response = self.client.messages.create(
+                # Make the provider-specific API call
+                response = self.provider.complete(
                     model=self.model,
+                    system_prompt=self.system_prompt,
+                    user_prompt=user_prompt,
                     max_tokens=self.max_tokens,
                     temperature=self.temperature,
-                    system=self.system_prompt,
-                    messages=[
-                        {"role": "user", "content": user_prompt}
-                    ],
                 )
                 
                 # Calculate latency
                 latency_ms = int((time.time() - start_time) * 1000)
-                
-                # Extract text from response
-                response_text = ""
-                for block in response.content:
-                    if block.type == "text":
-                        response_text += block.text
                 
                 # Create audit entry
                 audit = create_audit_entry(
@@ -227,8 +185,8 @@ class BaseAgent:
                         "feedback_count": len(feedback) if feedback else 0,
                     },
                     output_snapshot={
-                        "response": truncate_for_snapshot(response_text),
-                        "response_length": len(response_text),
+                        "response": truncate_for_snapshot(response.text),
+                        "response_length": len(response.text),
                         "stop_reason": response.stop_reason,
                     },
                     model_used=self.model,
@@ -237,13 +195,13 @@ class BaseAgent:
                     metadata={
                         "temperature": self.temperature,
                         "max_tokens": self.max_tokens,
-                        "input_tokens": response.usage.input_tokens,
-                        "output_tokens": response.usage.output_tokens,
+                        "input_tokens": response.input_tokens,
+                        "output_tokens": response.output_tokens,
                         "api_attempt": attempt + 1,
                     },
                 )
                 
-                return response_text, audit
+                return response.text, audit
                 
             except Exception as e:
                 last_error = e

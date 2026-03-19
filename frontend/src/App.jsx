@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PipelineView from "./components/PipelineView";
 import SourcePanel from "./components/SourcePanel";
 import GeneratePanel from "./components/GeneratePanel";
@@ -30,6 +30,24 @@ const PRODUCTS = {
   dermask_micro_jet: { label: "Dermask™ Micro Jet", sub: "Clearing Solution" },
 };
 
+const MODELS = {
+  "claude-haiku-3-5-20241022": "Claude Haiku 3.5",
+  "claude-sonnet-4-20250514": "Claude Sonnet 4",
+  "claude-opus-4-20250514": "Claude Opus 4",
+};
+
+const IMAGE_GENERATORS = {
+  "midjourney-v6": "Midjourney v6",
+  "flux-1.1-pro": "Flux 1.1 Pro",
+  "gpt-image-1": "GPT Image 1",
+};
+
+const VIDEO_GENERATORS = {
+  "runway-gen4": "Runway Gen-4",
+  "veo-3": "Google Veo 3",
+  "sora": "OpenAI Sora",
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("pipeline");
   const [running, setRunning] = useState(false);
@@ -38,6 +56,43 @@ export default function App() {
   const [error, setError] = useState(null);
   const [trigger, setTrigger] = useState("seasonal_spring");
   const [product, setProduct] = useState("ceramidin_cream");
+  const [generationModel, setGenerationModel] = useState("claude-sonnet-4-20250514");
+  const [judgeModel, setJudgeModel] = useState("claude-sonnet-4-20250514");
+  const [imageGenerator, setImageGenerator] = useState("midjourney-v6");
+  const [videoGenerator, setVideoGenerator] = useState("runway-gen4");
+  const [modelMenuOpen, setModelMenuOpen] = useState(false);
+  const [optionLists, setOptionLists] = useState({
+    generation_models: Object.keys(MODELS),
+    judge_models: Object.keys(MODELS),
+    image_generators: Object.keys(IMAGE_GENERATORS),
+    video_generators: Object.keys(VIDEO_GENERATORS),
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/models")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || cancelled) return;
+        setOptionLists({
+          generation_models: data.generation_models || Object.keys(MODELS),
+          judge_models: data.judge_models || Object.keys(MODELS),
+          image_generators: data.image_generators || Object.keys(IMAGE_GENERATORS),
+          video_generators: data.video_generators || Object.keys(VIDEO_GENERATORS),
+        });
+
+        if (data.defaults?.generation_model) setGenerationModel(data.defaults.generation_model);
+        if (data.defaults?.judge_model) setJudgeModel(data.defaults.judge_model);
+        if (data.defaults?.image_generator) setImageGenerator(data.defaults.image_generator);
+        if (data.defaults?.video_generator) setVideoGenerator(data.defaults.video_generator);
+      })
+      .catch(() => {
+        // Silent fallback to local constants if backend option endpoint is unavailable.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleRun = async () => {
     setRunning(true);
@@ -48,7 +103,14 @@ export default function App() {
       const runRes = await fetch("/api/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trigger, product }),
+        body: JSON.stringify({
+          trigger,
+          product,
+          generation_model: generationModel,
+          judge_model: judgeModel,
+          image_generator: imageGenerator,
+          video_generator: videoGenerator,
+        }),
       }).then(r => r.json());
 
       const runId = runRes.run_id;
@@ -96,7 +158,8 @@ export default function App() {
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
-        boxShadow: "2px 0 8px rgba(0,0,0,0.04)"
+        boxShadow: "2px 0 8px rgba(0,0,0,0.04)",
+        overflowY: "auto",
       }}>
         {/* Brand header */}
         <div style={{
@@ -121,7 +184,7 @@ export default function App() {
           <div style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", lineHeight: 1.2, marginBottom: 2 }}>
             AI Content Pipeline
           </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>v1.0 · Claude Sonnet 4</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>v1.0 · Model Selectable</div>
         </div>
 
         {/* Product selector */}
@@ -179,6 +242,126 @@ export default function App() {
               <option key={val} value={val}>{label}</option>
             ))}
           </select>
+          <div style={{ marginTop: 10 }}>
+            <button
+              onClick={() => setModelMenuOpen(v => !v)}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "9px 12px",
+                background: "var(--bg-primary)",
+                border: "1px solid var(--border)",
+                color: "var(--text-primary)",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: 0.4,
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              <span>Model Settings</span>
+              <span style={{ fontSize: 14, opacity: 0.8 }}>{modelMenuOpen ? "▾" : "▸"}</span>
+            </button>
+
+            {modelMenuOpen && (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: 0.8 }}>Prompt Generation Model</div>
+                <select
+                  value={generationModel}
+                  onChange={e => setGenerationModel(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 500,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {optionLists.generation_models.map((val) => (
+                    <option key={val} value={val}>{MODELS[val] || val}</option>
+                  ))}
+                </select>
+
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: "10px 0 8px", textTransform: "uppercase", letterSpacing: 0.8 }}>Judge Model</div>
+                <select
+                  value={judgeModel}
+                  onChange={e => setJudgeModel(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 500,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {optionLists.judge_models.map((val) => (
+                    <option key={val} value={val}>{MODELS[val] || val}</option>
+                  ))}
+                </select>
+
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: "10px 0 8px", textTransform: "uppercase", letterSpacing: 0.8 }}>Image Generator</div>
+                <select
+                  value={imageGenerator}
+                  onChange={e => setImageGenerator(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 500,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {optionLists.image_generators.map((val) => (
+                    <option key={val} value={val}>{IMAGE_GENERATORS[val] || val}</option>
+                  ))}
+                </select>
+
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: "10px 0 8px", textTransform: "uppercase", letterSpacing: 0.8 }}>Video Generator</div>
+                <select
+                  value={videoGenerator}
+                  onChange={e => setVideoGenerator(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 500,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {optionLists.video_generators.map((val) => (
+                    <option key={val} value={val}>{VIDEO_GENERATORS[val] || val}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleRun}
             disabled={running}
@@ -250,6 +433,8 @@ export default function App() {
           <div style={{ fontSize: 11, color: "var(--text-muted)", lineHeight: 1.7 }}>
             <span style={{ display: "block", fontWeight: 600, color: "var(--text-secondary)" }}>{PRODUCTS[product]?.label}</span>
             Anchor product · Dr. Jart+
+            <span style={{ display: "block", marginTop: 4 }}>Gen: {MODELS[generationModel] || generationModel} · Judge: {MODELS[judgeModel] || judgeModel}</span>
+            <span style={{ display: "block", marginTop: 2 }}>Img: {IMAGE_GENERATORS[imageGenerator] || imageGenerator} · Vid: {VIDEO_GENERATORS[videoGenerator] || videoGenerator}</span>
           </div>
         </div>
       </div>

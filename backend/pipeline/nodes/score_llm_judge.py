@@ -125,7 +125,8 @@ def score_llm_judge(state: Dict[str, Any]) -> Dict[str, Any]:
     threshold = rubric_config.get("threshold", {}).get("composite_pass", 85)
 
     # Initialize judge
-    judge = JudgeAgent()
+    judge_model = state.get("judge_model") or state.get("generation_model", "claude-sonnet-4-20250514")
+    judge = JudgeAgent(model=judge_model)
 
     # Get trend narratives and sourced claims for the judge
     trend_narratives = state.get("trend_narratives", [])

@@ -25,12 +25,12 @@ from backend.observability.audit_log import create_audit_entry
 SYNTHESIS_PROMPT = """You are a trend analyst for Dr. Jart+ skincare brand.
 
 Your task: Analyze the sourced trend data below and distill exactly 3 trend narratives 
-that connect to Ceramidin™ Skin Barrier Moisturizing Cream.
+that connect to the selected anchor product.
 
 Each narrative should be:
 1. One clear sentence summarizing a key trend
 2. Grounded in the specific source data provided
-3. Connected to Ceramidin™'s positioning (5-ceramide barrier repair cream)
+3. Connected to the anchor product's approved claims and positioning from context
 
 The 3 narratives should cover DIFFERENT angles:
 - Narrative 1: The consumer/cultural shift (what people are doing differently)
@@ -105,7 +105,7 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
         )
 
     # Load product context
-    product_truth = ProductTruthRegistry()
+    product_truth = ProductTruthRegistry(product_key=state.get("product", "ceramidin_cream"))
 
     # Call LLM for synthesis
     try:

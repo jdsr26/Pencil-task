@@ -179,3 +179,180 @@ evidence_thresholds:
   poor:
     min_records_below: 3
     description: "Not enough evidence to generate responsibly — stop and escalate"
+
+# ─── Product Profiles ───
+# Extra keywords used by source_collect for each anchor product.
+product_profiles:
+  ceramidin_cream:
+    keywords_any:
+      - "ceramidin"
+      - "ceramide"
+      - "barrier repair"
+      - "panthenol"
+  cicapair_treatment:
+    keywords_any:
+      - "cicapair"
+      - "tiger grass"
+      - "centella"
+      - "redness"
+      - "color correcting"
+  dermask_micro_jet:
+    keywords_any:
+      - "dermask"
+      - "micro jet"
+      - "salicylic acid"
+      - "blemish"
+      - "pore care"
+
+# ─── YAML Source Packs ───
+# Added to the source registry per selected product/trigger.
+source_packs:
+  by_product:
+    cicapair_treatment:
+      - id: "cfg_cica_001"
+        title: "Dermatologists Predict Redness-Correcting SPF Will Surge in 2026"
+        source_url: "https://example.com/cicapair/derm-redness-spf-2026"
+        source_name: "Dermatology Roundtable"
+        category: "dermatologist_content"
+        publish_date: "2026-03-08"
+        relevance_score: 0.91
+        key_claims:
+          - "Dermatologists recommend centella + mineral UV support for reactive spring skin"
+          - "Redness-first routines outperform high-coverage makeup for sensitive skin"
+        competitor_mentions: ["Clinique Redness Solutions", "Erborian CC Red Correct"]
+        trend_tags: ["redness_relief", "centella", "spf", "sensitive_skin"]
+        product_link_rationale: "Cicapair combines tiger grass calming with redness color correction in one step"
+        synthetic: true
+      - id: "cfg_cica_002"
+        title: "TikTok #rednessrelief Creators Shift to Green Correcting Treatments"
+        source_url: "https://example.com/cicapair/tiktok-rednessrelief-2026"
+        source_name: "TikTok Social Listening"
+        category: "social_signal"
+        publish_date: "2026-03-12"
+        relevance_score: 0.89
+        key_claims:
+          - "Creator tutorials prioritize green correctors plus calming skincare under makeup"
+          - "Sensitive skin users seek makeup-skincare hybrids with SPF"
+        competitor_mentions: ["IT Cosmetics CC+ Cream"]
+        trend_tags: ["social_trend", "redness_relief", "color_correction"]
+        product_link_rationale: "Cicapair's green-to-beige correction and calming profile match this behavior"
+        synthetic: true
+      - id: "cfg_cica_003"
+        title: "Google Trends: 'Tiger Grass Cream' and 'Green Corrector SPF' Rising"
+        source_url: "https://example.com/cicapair/google-trends-redness-2026"
+        source_name: "Google Trends"
+        category: "retail_data"
+        publish_date: "2026-03-01"
+        relevance_score: 0.9
+        key_claims:
+          - "Searches for tiger grass skincare increased during spring allergy season"
+          - "Color correcting SPF interest rose with 'no-makeup makeup' routines"
+        competitor_mentions: ["Erborian CC Red Correct"]
+        trend_tags: ["search_volume", "tiger_grass", "redness_relief"]
+        product_link_rationale: "Cicapair directly maps to these queries with tiger grass plus SPF"
+        synthetic: true
+      - id: "cfg_cica_004"
+        title: "K-Beauty Calm-Skin Routines Favor Centella-First Layering"
+        source_url: "https://example.com/cicapair/kbeauty-centella-2026"
+        source_name: "K-Beauty Intelligence"
+        category: "kbeauty_intelligence"
+        publish_date: "2026-02-25"
+        relevance_score: 0.87
+        key_claims:
+          - "Centella-based daily color correction is replacing heavy base makeup in Seoul"
+          - "Skin-calming base products are now used as preventive care"
+        competitor_mentions: ["Aestura"]
+        trend_tags: ["kbeauty", "centella", "calming", "daily_base"]
+        product_link_rationale: "Cicapair's tiger grass identity aligns with centella-first preventative routines"
+        synthetic: true
+
+    dermask_micro_jet:
+      - id: "cfg_dermask_001"
+        title: "Derm Experts Reframe Acne Care as Pore Ecology Management"
+        source_url: "https://example.com/dermask/pore-ecology-2026"
+        source_name: "Dermatology Journal Digest"
+        category: "dermatologist_content"
+        publish_date: "2026-03-09"
+        relevance_score: 0.9
+        key_claims:
+          - "Low-irritation salicylic acid routines are preferred for sustained blemish control"
+          - "Sebum regulation plus barrier support outperforms aggressive stripping"
+        competitor_mentions: ["Paula's Choice BHA Exfoliant"]
+        trend_tags: ["blemish_control", "salicylic_acid", "pore_care"]
+        product_link_rationale: "Dermask Micro Jet targets pores and congestion with clarifying active support"
+        synthetic: true
+      - id: "cfg_dermask_002"
+        title: "#PoreReset Trend Pushes Lightweight Clarifying Formulas"
+        source_url: "https://example.com/dermask/tiktok-porereset-2026"
+        source_name: "TikTok Social Listening"
+        category: "social_signal"
+        publish_date: "2026-03-14"
+        relevance_score: 0.88
+        key_claims:
+          - "Consumers reject harsh drying products and prefer non-comedogenic texture claims"
+          - "Pore visibility conversations spike before spring event season"
+        competitor_mentions: ["The Ordinary Salicylic Acid 2%"]
+        trend_tags: ["social_trend", "porereset", "non_comedogenic"]
+        product_link_rationale: "Dermask positions pore clearing with lightweight, wearable texture"
+        synthetic: true
+      - id: "cfg_dermask_003"
+        title: "Search Demand Climbs for 'Blemish Clearing Solution' and 'Pore Refining Serum'"
+        source_url: "https://example.com/dermask/search-demand-2026"
+        source_name: "Google Trends"
+        category: "retail_data"
+        publish_date: "2026-03-02"
+        relevance_score: 0.89
+        key_claims:
+          - "Searches for blemish-safe active routines increased in Q1"
+          - "Consumers pair oil control with gentle daily care language"
+        competitor_mentions: ["Clinique Clarifying Lotion"]
+        trend_tags: ["search_volume", "blemish", "oil_control", "pore_refining"]
+        product_link_rationale: "Dermask's clarifying, oil-control proposition maps directly to demand"
+        synthetic: true
+      - id: "cfg_dermask_004"
+        title: "K-Beauty Spot-Care Moves from Harsh Acids to Precision Delivery"
+        source_url: "https://example.com/dermask/kbeauty-precision-delivery-2026"
+        source_name: "K-Beauty Intelligence"
+        category: "kbeauty_intelligence"
+        publish_date: "2026-02-20"
+        relevance_score: 0.86
+        key_claims:
+          - "Precision-delivery acne care concepts gain attention in Korean beauty retail"
+          - "Micro-targeted clearing products are marketed for daily use compliance"
+        competitor_mentions: ["COSRX", "Aestura"]
+        trend_tags: ["kbeauty", "precision_delivery", "acne_prone"]
+        product_link_rationale: "Dermask Micro Jet's delivery framing fits precision-care trend language"
+        synthetic: true
+
+  by_trigger:
+    event_competitor_launch:
+      - id: "cfg_trigger_comp_001"
+        title: "Competitor Watch: New Barrier SKU Launches Drive 'Why Ours Is Different' Messaging"
+        source_url: "https://example.com/trigger/competitor-launch-watch"
+        source_name: "Competitor Intelligence Feed"
+        category: "competitor_tracking"
+        publish_date: "2026-03-11"
+        relevance_score: 0.9
+        key_claims:
+          - "Recent launches emphasize ceramide ingredient count but under-index on experiential brand voice"
+          - "Barrier-repair positioning opportunity lies in proof + personality, not claim inflation"
+        competitor_mentions: ["CeraVe", "La Roche-Posay"]
+        trend_tags: ["competitor_signal", "positioning_gap"]
+        product_link_rationale: "Supports rapid competitive response trigger with grounded differentiation"
+        synthetic: true
+
+    event_viral_trend:
+      - id: "cfg_trigger_viral_001"
+        title: "Viral Spike Brief: Skin Recovery Challenge Crosses Threshold"
+        source_url: "https://example.com/trigger/viral-spike-brief"
+        source_name: "Social Signal Desk"
+        category: "social_signal"
+        publish_date: "2026-03-15"
+        relevance_score: 0.92
+        key_claims:
+          - "A short-form challenge accelerated weekly mention velocity for barrier and redness routines"
+          - "Comment language favors practical routine steps over aspirational messaging"
+        competitor_mentions: ["CeraVe"]
+        trend_tags: ["viral_moment", "social_trend", "barrier_repair"]
+        product_link_rationale: "Provides high-velocity social signal for viral trigger runs"
+        synthetic: true

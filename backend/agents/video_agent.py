@@ -20,6 +20,7 @@ import re
 from typing import Dict, Any, List, Optional, Tuple
 
 from backend.agents.base_agent import BaseAgent
+from backend.prompting.generator_adapters import video_generator_instructions
 from backend.pipeline.state import AssetOutput, AuditEntry
 
 
@@ -42,7 +43,12 @@ class VideoAgent(BaseAgent):
         MUSIC DIRECTION: [audio guidance]
     """
 
-    def __init__(self, system_prompt: str, model: Optional[str] = None):
+    def __init__(
+        self,
+        system_prompt: str,
+        model: Optional[str] = None,
+        target_generator: str = "runway-gen4",
+    ):
         super().__init__(
             name="generate_assets.video",
             system_prompt=system_prompt,
@@ -50,11 +56,16 @@ class VideoAgent(BaseAgent):
             temperature=0.7,
             max_tokens=1500,   # Video prompts need more space for scene descriptions
         )
+        self.target_generator = target_generator
 
-    def get_task_prompt(self) -> str:
+    def get_task_prompt(self, product_name: str = "Dr. Jart+ product") -> str:
         """Video-specific generation instruction."""
-        return """Generate a video generation prompt for a 15-second vertical social media ad 
-for Dr. Jart+ Ceramidin™ Skin Barrier Moisturizing Cream.
+        generator_notes = video_generator_instructions(self.target_generator)
+        return f"""Generate a video generation prompt for a 15-second vertical social media ad 
+    for {product_name}.
+
+    TARGET GENERATOR GUIDANCE:
+    {generator_notes}
 
 FORMAT REQUIREMENTS (strict):
 - Duration: 15 seconds
@@ -108,7 +119,7 @@ Write ONLY the prompt structure above. No explanations or commentary."""
             Tuple of (AssetOutput, AuditEntry)
         """
         response_text, audit = self.call(
-            task=self.get_task_prompt(),
+            task=self.get_task_prompt(context.get("product_name", "Dr. Jart+ product")),
             context=context,
             feedback=feedback,
         )

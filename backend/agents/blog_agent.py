@@ -59,10 +59,9 @@ class BlogAgent(BaseAgent):
             max_tokens=4000,   # Blog posts are ~1000 words — need generous output window
         )
 
-    def get_task_prompt(self) -> str:
+    def get_task_prompt(self, product_name: str = "Dr. Jart+ product") -> str:
         """Blog-specific generation instruction."""
-        return """Generate an SEO-optimized blog post for Dr. Jart+ about Ceramidin™ Skin Barrier 
-Moisturizing Cream and the 2026 barrier repair trend.
+        return f"""Generate an SEO-optimized blog post for Dr. Jart+ about {product_name} and the most relevant 2026 skincare trend.
 
 FORMAT REQUIREMENTS (strict):
 - Start with META DESCRIPTION on the first line (≤155 characters)
@@ -102,7 +101,7 @@ STRUCTURE (follow this outline):
    IMPORTANT: Every statistic or trend claim must come from the 
    sourced trend data provided in your context. Do not invent numbers.
 
-6. ## Ceramidin™: Built for This Moment (~300 words)
+6. ## Product Spotlight: Built for This Moment (~300 words)
    Product deep-dive:
    - 5-ceramide complex — what each ceramide does
    - Panthenol for soothing
@@ -115,12 +114,12 @@ STRUCTURE (follow this outline):
 
 7. ## Conclusion + CTA (~100 words)
    Reinforce the "skin longevity" narrative.
-   Suggest a simple routine (cleanser + Ceramidin™ Cream).
+    Suggest a simple routine with the anchor product.
    Clear CTA: link to product page, encourage trial.
 
 SEO REQUIREMENTS:
-- Naturally incorporate these keywords: "skin barrier repair", 
-  "ceramide moisturizer", "barrier cream 2026", "Dr. Jart+ Ceramidin"
+- Naturally incorporate these keywords: "Dr. Jart+", 
+    "2026 skincare trend", and anchor-product-relevant terms from context.
 - Use keywords in at least 2 H2 headings
 - Keep paragraphs short (3-4 sentences max) for readability
 - Write for someone who researches before buying — informed, not dumbed down
@@ -150,7 +149,7 @@ Start with META DESCRIPTION on the very first line."""
             Tuple of (AssetOutput, AuditEntry)
         """
         response_text, audit = self.call(
-            task=self.get_task_prompt(),
+            task=self.get_task_prompt(context.get("product_name", "Dr. Jart+ product")),
             context=context,
             feedback=feedback,
         )
