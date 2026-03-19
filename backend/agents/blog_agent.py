@@ -50,12 +50,12 @@ class BlogAgent(BaseAgent):
         ## [Conclusion with CTA]
     """
 
-    def __init__(self, system_prompt: str, model: Optional[str] = None):
+    def __init__(self, system_prompt: str, model: Optional[str] = None, temperature: float = 0.7):
         super().__init__(
             name="generate_assets.blog",
             system_prompt=system_prompt,
             model=model,
-            temperature=0.7,
+            temperature=temperature,
             max_tokens=4000,   # Blog posts are ~1000 words — need generous output window
         )
 
@@ -169,7 +169,7 @@ Start with META DESCRIPTION on the very first line."""
         asset = AssetOutput(
             content=response_text,
             generated_at=audit.timestamp,
-            model_used=self.model,
+            model_used=audit.metadata.get("resolved_model", self.model),
             prompt_hash=audit.prompt_hash,
         )
 

@@ -120,3 +120,40 @@ Change `config/scoring_rubric.yaml` → changes how quality is measured.
 Change `config/triggers.yaml` → changes sourcing emphasis and campaign context.
 Change `config/sources.yaml` → changes filtering behavior and YAML-backed evidence coverage.
 No code changes needed to swap supported products, triggers, or allowed models.
+
+## Reproducibility Controls
+
+### Run Modes
+
+| Mode | Narrative temp | Asset temps | Judge temp | Purpose |
+|------|---------------|-------------|------------|---------|
+| `creative` | 0.2 | ads/video/blog: 0.25, image: 0.3 | 0.1 | Production — low nonzero for quality variance |
+| `demo` | 0.0 | 0.0 all | 0.0 | Controlled comparison, benchmarking, debugging |
+
+### Retry Policies
+
+| Policy | Behaviour |
+|--------|-----------|
+| `production_selective` | Retry only failing assets; preserve passed ones |
+| `benchmark_none` | No retries; max_retries forced to 0 |
+| `benchmark_rerun_all` | Retry regenerates all assets, ignoring previous pass state |
+
+### Payload Hashes
+
+Every run records stable SHA-256 fingerprints (12-char hex prefix) for the key stochastic boundaries:
+
+- **`evidence_hash`** — fingerprint of the filtered source records fed into narrative synthesis (id, source_name, category, claims, tags). Same hash = same evidence input.
+- **`narrative_hash`** — fingerprint of the 3 trend narratives produced. Same hash = same narrative, regardless of which run produced it.
+- **`retry_feedback_hash`** — fingerprint of the feedback payload injected into each retry cycle.
+
+These appear in the audit log entry for each node and in the final campaign metadata bundle.
+
+### Resolved Model Versions
+
+`resolved_model_versions` in campaign metadata is the sorted set of actual model IDs returned by provider API responses (e.g. `claude-sonnet-4-20250514`). This is distinct from the requested model alias — it pins the exact checkpoint used, not the alias that might resolve differently over time.
+
+### Why Two Runs With The Same Settings Produce Different Bundles
+
+With `run_mode: creative`, temperature > 0 means every LLM call samples from a distribution. The same prompt produces different tokens on each run. Narrative synthesis diverges first (same evidence_hash, different narrative_hash), then asset generation diverges (different prompt hashes downstream), then scores diverge. The hashes make this traceable: compare `evidence_hash` → `narrative_hash` → per-asset prompt hashes across two audit files to identify exactly which stage diverged.
+
+To eliminate this: use `run_mode: demo`. All temperatures collapse to 0.0.

@@ -48,12 +48,13 @@ class VideoAgent(BaseAgent):
         system_prompt: str,
         model: Optional[str] = None,
         target_generator: str = "runway-gen4",
+        temperature: float = 0.7,
     ):
         super().__init__(
             name="generate_assets.video",
             system_prompt=system_prompt,
             model=model,
-            temperature=0.7,
+            temperature=temperature,
             max_tokens=1500,   # Video prompts need more space for scene descriptions
         )
         self.target_generator = target_generator
@@ -137,7 +138,7 @@ Write ONLY the prompt structure above. No explanations or commentary."""
         asset = AssetOutput(
             content=response_text,
             generated_at=audit.timestamp,
-            model_used=self.model,
+            model_used=audit.metadata.get("resolved_model", self.model),
             prompt_hash=audit.prompt_hash,
         )
 

@@ -39,3 +39,15 @@ Live scraping is impressive but fragile during demos. Pre-curated data with scra
 
 ## Why A Collapsible Model Settings Menu In The UI?
 There are now four related controls: prompt-generation model, judge model, image generator, and video generator. Grouping them under one expandable menu reduces sidebar clutter while still making the system's configurability visible during demos and interviews.
+
+## Why Two Run Modes (Creative vs Demo) Instead Of One Fixed Temperature?
+Creative mode uses low nonzero temperatures (narrative: 0.2, assets: 0.25–0.3, judge: 0.1). Pure 0.0 across the board makes outputs mechanically repetitive — the same sentence structures, the same phrasing, the same hook every run. That hurts quality in production. Demo mode uses 0.0 everywhere and is designed for controlled comparisons, benchmarking, and debugging — not for production campaigns.
+
+## Why Do Two Creative-Mode Runs Produce Different Bundles?
+This is expected and intentional. Temperature > 0 means the model samples from a probability distribution on every token. Even with identical prompts and identical settings, each run is a new sample. The narrative synthesis node produces slightly different narratives, which changes downstream asset prompt hashes, which changes asset content, which changes scores. This is not a bug — it is the creative variance that makes the output non-robotic. The `evidence_hash` and `narrative_hash` in each audit file let you trace exactly where the two runs diverged.
+
+## Why Log evidence_hash and narrative_hash?
+Hashes fingerprint the inputs to each stochastic stage. If two runs share the same `evidence_hash` but have different `narrative_hash` values, the divergence happened inside narrative synthesis. If they share the same `narrative_hash` but produce different assets, the divergence happened inside asset generation. This makes run-to-run variance debuggable instead of opaque.
+
+## Why Three Retry Policies?
+`production_selective` retries only failing assets, preserving passed ones — correct for production where passed assets are expensive to regenerate. `benchmark_none` disables retries entirely — correct for benchmarking where you want a clean single-pass measurement. `benchmark_rerun_all` regenerates all assets on retry regardless of previous pass state — correct for reproducibility testing where you need to confirm scores are stable across full reruns, not just for individual failing assets.

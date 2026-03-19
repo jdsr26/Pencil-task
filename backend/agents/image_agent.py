@@ -38,12 +38,13 @@ class ImageAgent(BaseAgent):
         system_prompt: str,
         model: Optional[str] = None,
         target_generator: str = "midjourney-v6",
+        temperature: float = 0.8,
     ):
         super().__init__(
             name="generate_assets.image",
             system_prompt=system_prompt,
             model=model,
-            temperature=0.8,   # Slightly higher — image prompts benefit from more creativity
+            temperature=temperature,   # Tuned by run mode (creative/demo)
             max_tokens=800,    # Image prompts are concise — one dense paragraph + flags
         )
         self.target_generator = target_generator
@@ -122,7 +123,7 @@ Example structure (DO NOT copy this — create original):
         asset = AssetOutput(
             content=response_text,
             generated_at=audit.timestamp,
-            model_used=self.model,
+            model_used=audit.metadata.get("resolved_model", self.model),
             prompt_hash=audit.prompt_hash,
         )
 

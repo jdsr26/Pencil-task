@@ -8,6 +8,8 @@ export async function runPipeline(
     judgeModel = "claude-sonnet-4-20250514",
     imageGenerator = "midjourney-v6",
     videoGenerator = "runway-gen4",
+    runMode = "creative",
+    retryPolicy = "production_selective",
   } = {}
 ) {
   const res = await fetch(`${API_BASE}/run`, {
@@ -20,6 +22,8 @@ export async function runPipeline(
       judge_model: judgeModel,
       image_generator: imageGenerator,
       video_generator: videoGenerator,
+      run_mode: runMode,
+      retry_policy: retryPolicy,
     }),
   });
   if (!res.ok) throw new Error(`Pipeline failed: ${res.statusText}`);

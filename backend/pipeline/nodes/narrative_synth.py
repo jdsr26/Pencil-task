@@ -19,7 +19,7 @@ from typing import Dict, Any, List
 
 from backend.agents.base_agent import BaseAgent
 from backend.registries.product_truth import ProductTruthRegistry
-from backend.observability.audit_log import create_audit_entry
+from backend.observability.audit_log import create_audit_entry, hash_payload
 
 
 SYNTHESIS_PROMPT = """You are a trend analyst for Dr. Jart+ skincare brand.
@@ -77,6 +77,7 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
 
     # Build context from filtered records
     filtered_records = state.get("filtered_records", [])
+    run_mode = state.get("run_mode", "creative")
     
     source_context = []
     for record in filtered_records:
@@ -109,10 +110,11 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
 
     # Call LLM for synthesis
     try:
+        narrative_temperature = 0.0 if run_mode == "demo" else 0.2
         agent = BaseAgent(
             name="narrative_synth",
             system_prompt=SYNTHESIS_PROMPT,
-            temperature=0.5,   # Moderate — analytical, not creative
+            temperature=narrative_temperature,
             max_tokens=500,
         )
 
@@ -126,6 +128,7 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
 
         # Parse narratives
         narratives = _parse_narratives(response_text)
+        narrative_hash = hash_payload(narratives)
 
         audit = create_audit_entry(
             node="narrative_synth",
@@ -142,10 +145,16 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
                 "narrative_count": len(narratives),
                 "narratives": narratives,
             },
+            metadata={
+                "narrative_hash": narrative_hash,
+                "run_mode": run_mode,
+                "temperature": narrative_temperature,
+            },
         )
 
         return {
             "trend_narratives": narratives,
+            "narrative_hash": narrative_hash,
             "audit_log": state.get("audit_log", []) + [llm_audit.model_dump(), audit.model_dump()],
             "status": "narrative_synth_complete",
         }
@@ -153,6 +162,7 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         # Fallback: extract top claims directly from records
         narratives = _fallback_narratives(filtered_records)
+        narrative_hash = hash_payload(narratives)
 
         audit = create_audit_entry(
             node="narrative_synth",
@@ -163,10 +173,15 @@ def narrative_synth(state: Dict[str, Any]) -> Dict[str, Any]:
                 "narratives": narratives,
                 "method": "fallback_claim_extraction",
             },
+            metadata={
+                "narrative_hash": narrative_hash,
+                "run_mode": run_mode,
+            },
         )
 
         return {
             "trend_narratives": narratives,
+            "narrative_hash": narrative_hash,
             "audit_log": state.get("audit_log", []) + [audit.model_dump()],
             "status": "narrative_synth_fallback",
         }

@@ -18,6 +18,8 @@ def test_run_request_defaults_to_sonnet():
     assert req.judge_model is None
     assert req.image_generator == "midjourney-v6"
     assert req.video_generator == "runway-gen4"
+    assert req.run_mode == "creative"
+    assert req.retry_policy == "production_selective"
 
 
 def test_run_request_rejects_unsupported_generation_model():
@@ -47,11 +49,15 @@ def test_initial_state_includes_selected_models():
         judge_model="claude-haiku-3-5-20241022",
         image_generator="gpt-image-1",
         video_generator="veo-3",
+        run_mode="demo",
+        retry_policy="benchmark_none",
     )
     assert state["generation_model"] == "claude-opus-4-20250514"
     assert state["judge_model"] == "claude-haiku-3-5-20241022"
     assert state["image_generator"] == "gpt-image-1"
     assert state["video_generator"] == "veo-3"
+    assert state["run_mode"] == "demo"
+    assert state["retry_policy"] == "benchmark_none"
 
 
 def test_run_request_rejects_unsupported_generators():
@@ -60,3 +66,11 @@ def test_run_request_rejects_unsupported_generators():
 
     with pytest.raises(ValidationError):
         RunRequest(video_generator="pika")
+
+
+def test_run_request_rejects_invalid_modes():
+    with pytest.raises(ValidationError):
+        RunRequest(run_mode="benchmark")
+
+    with pytest.raises(ValidationError):
+        RunRequest(retry_policy="retry_everything")

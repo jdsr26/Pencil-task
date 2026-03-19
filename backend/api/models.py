@@ -31,6 +31,17 @@ ALLOWED_VIDEO_GENERATORS = [
     "sora",
 ]
 
+ALLOWED_RUN_MODES = [
+    "creative",
+    "demo",
+]
+
+ALLOWED_RETRY_POLICIES = [
+    "production_selective",
+    "benchmark_none",
+    "benchmark_rerun_all",
+]
+
 
 class RunRequest(BaseModel):
     trigger: str = "seasonal_spring"
@@ -39,6 +50,8 @@ class RunRequest(BaseModel):
     judge_model: Optional[str] = None
     image_generator: str = "midjourney-v6"
     video_generator: str = "runway-gen4"
+    run_mode: str = "creative"
+    retry_policy: str = "production_selective"
 
     @field_validator("generation_model")
     @classmethod
@@ -77,6 +90,26 @@ class RunRequest(BaseModel):
             raise ValueError(
                 f"Unsupported video_generator '{value}'. "
                 f"Allowed: {', '.join(ALLOWED_VIDEO_GENERATORS)}"
+            )
+        return value
+
+    @field_validator("run_mode")
+    @classmethod
+    def validate_run_mode(cls, value: str) -> str:
+        if value not in ALLOWED_RUN_MODES:
+            raise ValueError(
+                f"Unsupported run_mode '{value}'. "
+                f"Allowed: {', '.join(ALLOWED_RUN_MODES)}"
+            )
+        return value
+
+    @field_validator("retry_policy")
+    @classmethod
+    def validate_retry_policy(cls, value: str) -> str:
+        if value not in ALLOWED_RETRY_POLICIES:
+            raise ValueError(
+                f"Unsupported retry_policy '{value}'. "
+                f"Allowed: {', '.join(ALLOWED_RETRY_POLICIES)}"
             )
         return value
 

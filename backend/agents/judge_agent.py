@@ -98,12 +98,12 @@ class JudgeAgent(BaseAgent):
       - Validates response against LLMJudgeResult Pydantic model
     """
 
-    def __init__(self, model: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, temperature: float = 0.3):
         super().__init__(
             name="score_llm_judge",
             system_prompt=JUDGE_SYSTEM_PROMPT,
             model=model,
-            temperature=0.3,   # Low — we want CONSISTENT scoring, not creative scoring
+            temperature=temperature,   # Tuned by run mode (creative/demo)
             max_tokens=800,    # JSON scores + 3 feedback points don't need much space
         )
 
@@ -202,7 +202,7 @@ Rules:
                 trend_alignment=parsed_json["trend_alignment"],
                 feedback=parsed_json.get("feedback", []),
                 raw_response=str(parsed_json),
-                model_used=self.model,
+                model_used=audit.metadata.get("resolved_model", self.model),
             )
 
             # Enrich audit
@@ -232,7 +232,7 @@ Exactly this format:
                     trend_alignment=parsed_json["trend_alignment"],
                     feedback=parsed_json.get("feedback", []),
                     raw_response=str(parsed_json),
-                    model_used=self.model,
+                    model_used=audit.metadata.get("resolved_model", self.model),
                 )
 
                 audit.metadata["score_brand"] = result.brand_alignment

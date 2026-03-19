@@ -178,21 +178,48 @@ def generate_assets(state: Dict[str, Any]) -> Dict[str, Any]:
     generation_model = state.get("generation_model", "claude-sonnet-4-20250514")
     image_generator = state.get("image_generator", "midjourney-v6")
     video_generator = state.get("video_generator", "runway-gen4")
+    run_mode = state.get("run_mode", "creative")
+    retry_policy = state.get("retry_policy", "production_selective")
+
+    if run_mode == "demo":
+        asset_temperatures = {
+            "ads": 0.0,
+            "video": 0.0,
+            "image": 0.0,
+            "blog": 0.0,
+        }
+    else:
+        asset_temperatures = {
+            "ads": 0.25,
+            "video": 0.25,
+            "image": 0.3,
+            "blog": 0.25,
+        }
 
     # Initialize agents
     agents = {
-        "ads": AdsAgent(system_prompt=system_prompt, model=generation_model),
+        "ads": AdsAgent(
+            system_prompt=system_prompt,
+            model=generation_model,
+            temperature=asset_temperatures["ads"],
+        ),
         "video": VideoAgent(
             system_prompt=system_prompt,
             model=generation_model,
             target_generator=video_generator,
+            temperature=asset_temperatures["video"],
         ),
         "image": ImageAgent(
             system_prompt=system_prompt,
             model=generation_model,
             target_generator=image_generator,
+            temperature=asset_temperatures["image"],
         ),
-        "blog": BlogAgent(system_prompt=system_prompt, model=generation_model),
+        "blog": BlogAgent(
+            system_prompt=system_prompt,
+            model=generation_model,
+            temperature=asset_temperatures["blog"],
+        ),
     }
 
     # Get current state
@@ -215,14 +242,18 @@ def generate_assets(state: Dict[str, Any]) -> Dict[str, Any]:
         else:
             already_passed = getattr(asset_score, "passed", False)
 
-        if already_passed:
+        if already_passed and retry_policy != "benchmark_rerun_all":
             # This asset passed — don't touch it
             audit = create_audit_entry(
                 node=f"generate_assets.{asset_type}",
                 action="skipped_passed_asset",
                 input_snapshot={"reason": "Asset already passed scoring"},
                 output_snapshot={"version": _get_version(current_assets, asset_type)},
-                metadata={"iteration": iteration_counts.get(asset_type, 0)},
+                metadata={
+                    "iteration": iteration_counts.get(asset_type, 0),
+                    "run_mode": run_mode,
+                    "retry_policy": retry_policy,
+                },
             )
             audit_entries.append(audit.model_dump())
             continue

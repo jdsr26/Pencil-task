@@ -35,12 +35,12 @@ class AdsAgent(BaseAgent):
         DESCRIPTION 3: [text]
     """
 
-    def __init__(self, system_prompt: str, model: Optional[str] = None):
+    def __init__(self, system_prompt: str, model: Optional[str] = None, temperature: float = 0.7):
         super().__init__(
             name="generate_assets.ads",
             system_prompt=system_prompt,
             model=model,
-            temperature=0.7,   # Creative enough for good copy, constrained enough for brand safety
+            temperature=temperature,   # Tuned by run mode (creative/demo)
             max_tokens=1000,   # Ads are short — no need for large output window
         )
 
@@ -113,7 +113,7 @@ Write ONLY the 6 lines above. No explanations, no commentary, no extra text."""
         asset = AssetOutput(
             content=response_text,
             generated_at=audit.timestamp,
-            model_used=self.model,
+            model_used=audit.metadata.get("resolved_model", self.model),
             prompt_hash=audit.prompt_hash,
         )
 

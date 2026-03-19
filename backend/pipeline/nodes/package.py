@@ -69,6 +69,13 @@ def package(state: Dict[str, Any]) -> Dict[str, Any]:
     # ─── BUILD CAMPAIGN METADATA ───
     passing_count = sum(1 for d in deliverables.values() if d["passed"])
     total_iterations = sum(state.get("iteration_counts", {}).values())
+    resolved_models = sorted({
+        entry.get("model_used")
+        for entry in state.get("audit_log", [])
+        if isinstance(entry, dict)
+        and entry.get("action") in {"llm_call", "llm_call_failed"}
+        and entry.get("model_used")
+    })
 
     campaign_metadata = {
         "run_id": state.get("run_id", ""),
@@ -111,7 +118,14 @@ def package(state: Dict[str, Any]) -> Dict[str, Any]:
         "judge_model": state.get("judge_model") or state.get("generation_model", "claude-sonnet-4-20250514"),
         "image_generator": state.get("image_generator", "midjourney-v6"),
         "video_generator": state.get("video_generator", "runway-gen4"),
+        "run_mode": state.get("run_mode", "creative"),
+        "retry_policy": state.get("retry_policy", "production_selective"),
+        "resolved_model_versions": resolved_models,
         "pipeline_version": "1.0.0",
+
+        # Reproducibility fingerprints
+        "evidence_hash": state.get("evidence_hash", ""),
+        "narrative_hash": state.get("narrative_hash", ""),
 
         # Diagnostics
         "failure_diagnosis": failure_diagnosis,

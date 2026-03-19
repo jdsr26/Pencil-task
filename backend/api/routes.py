@@ -17,8 +17,10 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks
 from backend.api.models import (
     RunRequest, RunResponse, BundleResponse, AuditLogResponse,
     ALLOWED_MODELS, ALLOWED_IMAGE_GENERATORS, ALLOWED_VIDEO_GENERATORS,
+    ALLOWED_RUN_MODES, ALLOWED_RETRY_POLICIES,
 )
 from backend.pipeline.graph import run_pipeline
+from backend.observability.run_storage import save_run_artifacts, load_audit_entries
 
 router = APIRouter()
 
@@ -33,18 +35,7 @@ def _execute_pipeline(trigger: str, run_id_holder: dict):
         run_id = result.get("run_id", "unknown")
         run_id_holder["run_id"] = run_id
         _run_results[run_id] = result
-
-        # Also save to disk
-        os.makedirs("data/outputs", exist_ok=True)
-        output_path = f"data/outputs/run_{run_id}.json"
-        with open(output_path, "w") as f:
-            json.dump({
-                "campaign_metadata": result.get("campaign_metadata", {}),
-                "final_bundle": result.get("final_bundle", {}),
-                "scores": result.get("scores", {}),
-                "trend_narratives": result.get("trend_narratives", []),
-                "audit_log": result.get("audit_log", []),
-            }, f, indent=2, default=str)
+        save_run_artifacts(result)
 
     except Exception as e:
         print(f"Pipeline error: {e}")
@@ -70,6 +61,8 @@ def _run_in_background(
     judge_model: str = "claude-sonnet-4-20250514",
     image_generator: str = "midjourney-v6",
     video_generator: str = "runway-gen4",
+    run_mode: str = "creative",
+    retry_policy: str = "production_selective",
 ):
     """Execute pipeline in a background thread."""
     try:
@@ -81,21 +74,13 @@ def _run_in_background(
             judge_model=judge_model,
             image_generator=image_generator,
             video_generator=video_generator,
+            run_mode=run_mode,
+            retry_policy=retry_policy,
         )
         actual_id = result.get("run_id", run_id)
         _run_results[actual_id] = result
         _active_runs[run_id] = {"status": "complete", "actual_run_id": actual_id}
-
-        # Save to disk
-        os.makedirs("data/outputs", exist_ok=True)
-        with open(f"data/outputs/run_{actual_id}.json", "w") as f:
-            json.dump({
-                "campaign_metadata": result.get("campaign_metadata", {}),
-                "final_bundle": result.get("final_bundle", {}),
-                "scores": result.get("scores", {}),
-                "trend_narratives": result.get("trend_narratives", []),
-                "audit_log": result.get("audit_log", []),
-            }, f, indent=2, default=str)
+        save_run_artifacts(result)
 
     except Exception as e:
         print(f"Pipeline error: {e}")
@@ -116,6 +101,8 @@ def trigger_run(request: RunRequest):
             request.judge_model or request.generation_model,
             request.image_generator,
             request.video_generator,
+            request.run_mode,
+            request.retry_policy,
         ),
         daemon=True,
     )
@@ -135,11 +122,15 @@ def list_model_and_generator_options():
         "judge_models": ALLOWED_MODELS,
         "image_generators": ALLOWED_IMAGE_GENERATORS,
         "video_generators": ALLOWED_VIDEO_GENERATORS,
+        "run_modes": ALLOWED_RUN_MODES,
+        "retry_policies": ALLOWED_RETRY_POLICIES,
         "defaults": {
             "generation_model": "claude-sonnet-4-20250514",
             "judge_model": "claude-sonnet-4-20250514",
             "image_generator": "midjourney-v6",
             "video_generator": "runway-gen4",
+            "run_mode": "creative",
+            "retry_policy": "production_selective",
         },
     }
 
@@ -204,6 +195,14 @@ def get_logs(run_id: str):
     if run_id in _run_results:
         logs = _run_results[run_id].get("audit_log", [])
         return AuditLogResponse(run_id=run_id, entries=logs, total_entries=len(logs))
+
+    audit_data = load_audit_entries(run_id)
+    if audit_data:
+        return AuditLogResponse(
+            run_id=run_id,
+            entries=audit_data.get("entries", []),
+            total_entries=audit_data.get("total_entries", len(audit_data.get("entries", []))),
+        )
 
     filepath = f"data/outputs/run_{run_id}.json"
     if os.path.exists(filepath):

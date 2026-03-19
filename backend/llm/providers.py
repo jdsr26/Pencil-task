@@ -16,6 +16,8 @@ class ProviderResponse:
     stop_reason: Optional[str]
     input_tokens: int
     output_tokens: int
+    resolved_model: Optional[str] = None
+    provider_family: Optional[str] = None
     raw: Any = None
 
 
@@ -64,6 +66,8 @@ class AnthropicProvider(BaseProvider):
             stop_reason=response.stop_reason,
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
+            resolved_model=getattr(response, "model", model),
+            provider_family="anthropic",
             raw=response,
         )
 
@@ -113,6 +117,8 @@ class OpenAIProvider(BaseProvider):
             stop_reason=choice.get("finish_reason"),
             input_tokens=usage.get("prompt_tokens", 0),
             output_tokens=usage.get("completion_tokens", 0),
+            resolved_model=data.get("model", model),
+            provider_family="openai",
             raw=data,
         )
 
@@ -160,6 +166,8 @@ class GeminiProvider(BaseProvider):
             stop_reason=first.get("finishReason"),
             input_tokens=usage.get("promptTokenCount", 0),
             output_tokens=usage.get("candidatesTokenCount", 0),
+            resolved_model=data.get("modelVersion", model),
+            provider_family="gemini",
             raw=data,
         )
 

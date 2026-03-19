@@ -48,6 +48,17 @@ const VIDEO_GENERATORS = {
   "sora": "OpenAI Sora",
 };
 
+const RUN_MODES = {
+  creative: "Creative",
+  demo: "Demo",
+};
+
+const RETRY_POLICIES = {
+  production_selective: "Production (Retry Failing Assets)",
+  benchmark_none: "Benchmark (No Retries)",
+  benchmark_rerun_all: "Benchmark (Rerun All On Retry)",
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("pipeline");
   const [running, setRunning] = useState(false);
@@ -60,12 +71,16 @@ export default function App() {
   const [judgeModel, setJudgeModel] = useState("claude-sonnet-4-20250514");
   const [imageGenerator, setImageGenerator] = useState("midjourney-v6");
   const [videoGenerator, setVideoGenerator] = useState("runway-gen4");
+  const [runMode, setRunMode] = useState("creative");
+  const [retryPolicy, setRetryPolicy] = useState("production_selective");
   const [modelMenuOpen, setModelMenuOpen] = useState(false);
   const [optionLists, setOptionLists] = useState({
     generation_models: Object.keys(MODELS),
     judge_models: Object.keys(MODELS),
     image_generators: Object.keys(IMAGE_GENERATORS),
     video_generators: Object.keys(VIDEO_GENERATORS),
+    run_modes: Object.keys(RUN_MODES),
+    retry_policies: Object.keys(RETRY_POLICIES),
   });
 
   useEffect(() => {
@@ -79,12 +94,16 @@ export default function App() {
           judge_models: data.judge_models || Object.keys(MODELS),
           image_generators: data.image_generators || Object.keys(IMAGE_GENERATORS),
           video_generators: data.video_generators || Object.keys(VIDEO_GENERATORS),
+          run_modes: data.run_modes || Object.keys(RUN_MODES),
+          retry_policies: data.retry_policies || Object.keys(RETRY_POLICIES),
         });
 
         if (data.defaults?.generation_model) setGenerationModel(data.defaults.generation_model);
         if (data.defaults?.judge_model) setJudgeModel(data.defaults.judge_model);
         if (data.defaults?.image_generator) setImageGenerator(data.defaults.image_generator);
         if (data.defaults?.video_generator) setVideoGenerator(data.defaults.video_generator);
+        if (data.defaults?.run_mode) setRunMode(data.defaults.run_mode);
+        if (data.defaults?.retry_policy) setRetryPolicy(data.defaults.retry_policy);
       })
       .catch(() => {
         // Silent fallback to local constants if backend option endpoint is unavailable.
@@ -110,6 +129,8 @@ export default function App() {
           judge_model: judgeModel,
           image_generator: imageGenerator,
           video_generator: videoGenerator,
+          run_mode: runMode,
+          retry_policy: retryPolicy,
         }),
       }).then(r => r.json());
 
@@ -359,6 +380,52 @@ export default function App() {
                     <option key={val} value={val}>{VIDEO_GENERATORS[val] || val}</option>
                   ))}
                 </select>
+
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: "10px 0 8px", textTransform: "uppercase", letterSpacing: 0.8 }}>Run Mode</div>
+                <select
+                  value={runMode}
+                  onChange={e => setRunMode(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 500,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {optionLists.run_modes.map((val) => (
+                    <option key={val} value={val}>{RUN_MODES[val] || val}</option>
+                  ))}
+                </select>
+
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text-muted)", margin: "10px 0 8px", textTransform: "uppercase", letterSpacing: 0.8 }}>Retry Policy</div>
+                <select
+                  value={retryPolicy}
+                  onChange={e => setRetryPolicy(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border)",
+                    color: "var(--text-primary)",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    fontWeight: 500,
+                    outline: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  {optionLists.retry_policies.map((val) => (
+                    <option key={val} value={val}>{RETRY_POLICIES[val] || val}</option>
+                  ))}
+                </select>
               </div>
             )}
           </div>
@@ -435,6 +502,7 @@ export default function App() {
             Anchor product · Dr. Jart+
             <span style={{ display: "block", marginTop: 4 }}>Gen: {MODELS[generationModel] || generationModel} · Judge: {MODELS[judgeModel] || judgeModel}</span>
             <span style={{ display: "block", marginTop: 2 }}>Img: {IMAGE_GENERATORS[imageGenerator] || imageGenerator} · Vid: {VIDEO_GENERATORS[videoGenerator] || videoGenerator}</span>
+            <span style={{ display: "block", marginTop: 2 }}>Mode: {RUN_MODES[runMode] || runMode} · Retry: {RETRY_POLICIES[retryPolicy] || retryPolicy}</span>
           </div>
         </div>
       </div>

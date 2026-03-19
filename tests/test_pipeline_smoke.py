@@ -91,6 +91,8 @@ class _Resp:
         self.stop_reason = "end_turn"
         self.input_tokens = 100
         self.output_tokens = 200
+        self.resolved_model = "claude-sonnet-4-20250514"
+        self.provider_family = "anthropic"
 
 
 def _inject_fake_provider(monkeypatch):
@@ -107,6 +109,8 @@ def test_pipeline_smoke_cicapair_spring(monkeypatch):
         judge_model="claude-sonnet-4-20250514",
         image_generator="gpt-image-1",
         video_generator="veo-3",
+        run_mode="demo",
+        retry_policy="benchmark_none",
     )
 
     assert len(result.get("filtered_records", [])) > 0
@@ -115,6 +119,11 @@ def test_pipeline_smoke_cicapair_spring(monkeypatch):
     assert meta.get("anchor_product") == "cicapair_treatment"
     assert meta.get("video_generator") == "veo-3"
     assert meta.get("image_generator") == "gpt-image-1"
+    assert meta.get("run_mode") == "demo"
+    assert meta.get("retry_policy") == "benchmark_none"
+    assert meta.get("evidence_hash")
+    assert meta.get("narrative_hash")
+    assert "claude-sonnet-4-20250514" in meta.get("resolved_model_versions", [])
 
 
 def test_pipeline_smoke_dermask_competitor(monkeypatch):

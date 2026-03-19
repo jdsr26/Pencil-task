@@ -9,6 +9,7 @@ which the frontend renders as an expandable timeline.
 """
 
 import hashlib
+import json
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
@@ -62,6 +63,15 @@ def hash_prompt(prompt: str) -> str:
     Returns first 12 chars of SHA-256 hash.
     """
     return hashlib.sha256(prompt.encode()).hexdigest()[:12]
+
+
+def hash_payload(payload: Any) -> str:
+    """
+    Create a short stable hash for any JSON-serializable payload.
+    Useful for evidence fingerprints, narrative fingerprints, and retry payloads.
+    """
+    serialized = json.dumps(payload, sort_keys=True, ensure_ascii=True, default=str)
+    return hashlib.sha256(serialized.encode()).hexdigest()[:12]
 
 
 def truncate_for_snapshot(text: str, max_length: int = 500) -> str:

@@ -123,10 +123,41 @@ The frontend exposes:
 - Anchor product selection
 - Campaign trigger selection
 - A collapsible `Model Settings` menu with:
-       - Prompt Generation Model
-       - Judge Model
-       - Image Generator
-       - Video Generator
+  - Prompt Generation Model
+  - Judge Model
+  - Image Generator
+  - Video Generator
+  - Run Mode (`creative` / `demo`)
+  - Retry Policy (`production_selective` / `benchmark_none` / `benchmark_rerun_all`)
 
 The sidebar is scrollable so the full control surface remains usable on smaller screens.
+
+## Reproducibility and Run-To-Run Variance
+
+### Why Two Runs With The Same UI Settings Can Produce Different Bundles
+
+With `run_mode: creative`, all LLM calls use temperature > 0. Temperature > 0 means sampling — the model draws from a probability distribution on every token. Even with identical prompts and identical settings, each run produces a new sample. The pipeline propagates this variance:
+
+1. **Narrative synthesis** — same evidence, different narrative text (traceable via `narrative_hash`)
+2. **Asset generation** — different narratives produce different prompts (traceable via per-node `prompt_hash` in the audit log)
+3. **Scoring** — different content scores differently, changing pass/fail outcomes
+4. **Route decision** — different pass/fail outcomes trigger different retry paths
+
+This is intentional. Zero-temperature outputs are mechanically repetitive and lower quality in production. The hashes make variance observable and debuggable rather than opaque.
+
+### How To Get Deterministic Outputs
+
+Set `run_mode: demo`. This collapses all temperatures to 0.0 across every node (narrative: 0.0, all assets: 0.0, judge: 0.0). Two demo-mode runs with the same inputs will produce identical outputs.
+
+### Tracing Divergence Between Runs
+
+Compare audit files side by side:
+
+| Hash field | Location | What it tells you |
+|---|---|---|
+| `evidence_hash` | `source_collect` node metadata | Same hash = same filtered source records |
+| `narrative_hash` | `narrative_synth` node metadata | Same hash = divergence did not start at narrative |
+| `prompt_hash` | Every LLM node entry | Different hash = different prompt content fed to the model |
+| `retry_feedback_hash` | `route_decision` node output | Different hash = different failure feedback on retry |
+| `resolved_model_versions` | Campaign metadata | Confirms exact model checkpoint used, not just alias |
  

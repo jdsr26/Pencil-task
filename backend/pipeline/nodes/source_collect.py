@@ -15,7 +15,7 @@ from typing import Dict, Any
 from backend.pipeline.state import PipelineState, SourceRecord, AuditEntry
 from backend.registries.source_registry import SourceRegistry
 from backend.registries.product_truth import ProductTruthRegistry
-from backend.observability.audit_log import create_audit_entry
+from backend.observability.audit_log import create_audit_entry, hash_payload
 
 
 def source_collect(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -121,6 +121,18 @@ def source_collect(state: Dict[str, Any]) -> Dict[str, Any]:
             filtered.append(record)
 
     # Create audit entry
+    evidence_fingerprint = [
+        {
+            "id": r.id,
+            "source_name": r.source_name,
+            "category": r.category,
+            "claims": r.key_claims,
+            "tags": r.trend_tags,
+        }
+        for r in filtered
+    ]
+    evidence_hash = hash_payload(evidence_fingerprint)
+
     audit = create_audit_entry(
         node="source_collect",
         action="load_and_filter",
@@ -143,12 +155,14 @@ def source_collect(state: Dict[str, Any]) -> Dict[str, Any]:
         metadata={
             "trigger": trigger_key,
             "product": product_key,
+            "evidence_hash": evidence_hash,
         },
     )
 
     return {
         "sourced_records": [r.model_dump() for r in all_records],
         "filtered_records": [r.model_dump() for r in filtered],
+        "evidence_hash": evidence_hash,
         "audit_log": state.get("audit_log", []) + [audit.model_dump()],
         "status": "sourcing_complete",
     }

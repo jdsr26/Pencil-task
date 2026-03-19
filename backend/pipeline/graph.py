@@ -72,6 +72,8 @@ class GraphState(TypedDict, total=False):
     judge_model: str
     image_generator: str
     video_generator: str
+    run_mode: str
+    retry_policy: str
     started_at: str
     completed_at: str
     status: str
@@ -82,6 +84,8 @@ class GraphState(TypedDict, total=False):
     evidence_decision: str
     synthetic_records: list
     trend_narratives: list
+    evidence_hash: str
+    narrative_hash: str
 
     # Phase 2: Generation
     assets: dict
@@ -253,6 +257,8 @@ def create_initial_state(
   judge_model: str = "claude-sonnet-4-20250514",
   image_generator: str = "midjourney-v6",
   video_generator: str = "runway-gen4",
+  run_mode: str = "creative",
+  retry_policy: str = "production_selective",
 ) -> GraphState:
     """
     Create the initial state for a pipeline run.
@@ -268,6 +274,8 @@ def create_initial_state(
         "judge_model": judge_model,
         "image_generator": image_generator,
         "video_generator": video_generator,
+        "run_mode": run_mode,
+        "retry_policy": retry_policy,
         "started_at": datetime.now(timezone.utc).isoformat(),
         "status": "initialized",
         "sourced_records": [],
@@ -275,6 +283,8 @@ def create_initial_state(
         "evidence_decision": "sufficient",
         "synthetic_records": [],
         "trend_narratives": [],
+        "evidence_hash": "",
+        "narrative_hash": "",
         "assets": {},
         "scores": {},
         "failure_diagnosis": None,
@@ -294,6 +304,8 @@ def run_pipeline(
   judge_model: str = "claude-sonnet-4-20250514",
   image_generator: str = "midjourney-v6",
   video_generator: str = "runway-gen4",
+  run_mode: str = "creative",
+  retry_policy: str = "production_selective",
 ) -> Dict[str, Any]:
     """
     Execute the complete pipeline.
@@ -327,6 +339,8 @@ def run_pipeline(
       judge_model=judge_model,
       image_generator=image_generator,
       video_generator=video_generator,
+      run_mode=run_mode,
+      retry_policy=retry_policy,
     )
 
     # Run the pipeline
@@ -337,6 +351,8 @@ def run_pipeline(
     print(f"   Judge model: {judge_model}")
     print(f"   Image generator: {image_generator}")
     print(f"   Video generator: {video_generator}")
+    print(f"   Run mode: {run_mode}")
+    print(f"   Retry policy: {retry_policy}")
     print(f"   Started: {initial_state['started_at']}")
     print(f"{'='*60}\n")
 
@@ -367,26 +383,13 @@ if __name__ == "__main__":
     Run the pipeline from command line:
         uv run python -m backend.pipeline.graph
     """
-    import json
     import sys
+    from backend.observability.run_storage import save_run_artifacts
 
     trigger = sys.argv[1] if len(sys.argv) > 1 else "seasonal_spring"
     
     result = run_pipeline(trigger=trigger)
+    paths = save_run_artifacts(result)
 
-    # Save results
-    output_path = f"data/outputs/run_{result['run_id']}.json"
-    
-    import os
-    os.makedirs("data/outputs", exist_ok=True)
-    
-    with open(output_path, "w") as f:
-        json.dump({
-            "campaign_metadata": result.get("campaign_metadata", {}),
-            "final_bundle": result.get("final_bundle", {}),
-            "scores": result.get("scores", {}),
-            "trend_narratives": result.get("trend_narratives", []),
-            "audit_log": result.get("audit_log", []),
-        }, f, indent=2, default=str)
-
-    print(f"📁 Results saved to: {output_path}")
+    print(f"📁 Results saved to: {paths['output_path']}")
+    print(f"🧾 Audit saved to: {paths['audit_path']}")

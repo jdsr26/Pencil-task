@@ -24,7 +24,7 @@ This is what separates "prompt engineer" from
 import yaml
 from typing import Dict, Any, List, Tuple
 
-from backend.observability.audit_log import create_audit_entry
+from backend.observability.audit_log import create_audit_entry, hash_payload
 
 
 def _load_thresholds() -> Dict[str, Any]:
@@ -285,6 +285,10 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
     thresholds = _load_thresholds()
     max_retries = thresholds.get("max_retries", 3)
     circuit_breaker = thresholds.get("circuit_breaker_count", 3)
+    retry_policy = state.get("retry_policy", "production_selective")
+
+    if retry_policy == "benchmark_none":
+        max_retries = 0
 
     scores = state.get("scores", {})
     assets = state.get("assets", {})
@@ -327,6 +331,12 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
         new_review_entries.append(entry)
         human_review_queue.append(asset_type)
 
+    retry_feedback_payload = {
+        asset_type: scores.get(asset_type, {}).get("all_feedback", [])
+        for asset_type in retryable
+    }
+    retry_feedback_hash = hash_payload(retry_feedback_payload)
+
     # ─── STEP 5: ROUTING DECISION ───
     if len(failing) == 0 and not coherence_issues:
         # ✅ ALL PASS — individual scoring + campaign coherence both clear
@@ -358,6 +368,8 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
             f"Passed: {passing}. "
             f"Exhausted (→ human review): {exhausted if exhausted else 'none'}."
         )
+        if retry_policy == "benchmark_rerun_all":
+            decision_detail += " Policy benchmark_rerun_all active: regenerate all assets on retry."
         # Inject feedback into assets for retry
         assets = _inject_feedback_for_retry(assets, scores, retryable)
 
@@ -380,6 +392,7 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
             "failing_assets": failing,
             "iteration_counts": iteration_counts,
             "max_retries": max_retries,
+            "retry_policy": retry_policy,
         },
         output_snapshot={
             "next_node": next_node,
@@ -389,10 +402,12 @@ def route_decision(state: Dict[str, Any]) -> Dict[str, Any]:
             "exhausted": exhausted,
             "pattern_detected": pattern_detected,
             "human_review_entries": len(new_review_entries),
+            "retry_feedback_hash": retry_feedback_hash,
         },
         metadata={
             "diagnosis": diagnosis if pattern_detected else None,
             "human_review_queue": human_review_queue,
+            "retry_feedback_payload": retry_feedback_payload,
         },
     )
 

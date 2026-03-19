@@ -165,6 +165,8 @@ class PipelineState(BaseModel):
     judge_model: str = "claude-sonnet-4-20250514"
     image_generator: str = "midjourney-v6"
     video_generator: str = "runway-gen4"
+    run_mode: str = "creative"
+    retry_policy: str = "production_selective"
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
     status: str = "initialized"
@@ -175,6 +177,8 @@ class PipelineState(BaseModel):
     evidence_decision: EvidenceDecision = EvidenceDecision.SUFFICIENT
     synthetic_records: List[SourceRecord] = []
     trend_narratives: List[str] = []
+    evidence_hash: Optional[str] = None
+    narrative_hash: Optional[str] = None
 
     # ─── Phase 2: Generation ───
     assets: Dict[str, AssetOutput] = {}

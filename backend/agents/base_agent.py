@@ -175,6 +175,8 @@ class BaseAgent:
                 latency_ms = int((time.time() - start_time) * 1000)
                 
                 # Create audit entry
+                resolved_model = getattr(response, "resolved_model", None) or self.model
+                provider_family = getattr(response, "provider_family", None)
                 audit = create_audit_entry(
                     node=self.name,
                     action="llm_call",
@@ -189,7 +191,7 @@ class BaseAgent:
                         "response_length": len(response.text),
                         "stop_reason": response.stop_reason,
                     },
-                    model_used=self.model,
+                    model_used=resolved_model,
                     prompt_hash=prompt_hash_value,
                     latency_ms=latency_ms,
                     metadata={
@@ -198,6 +200,9 @@ class BaseAgent:
                         "input_tokens": response.input_tokens,
                         "output_tokens": response.output_tokens,
                         "api_attempt": attempt + 1,
+                        "requested_model": self.model,
+                        "resolved_model": resolved_model,
+                        "provider_family": provider_family,
                     },
                 )
                 
